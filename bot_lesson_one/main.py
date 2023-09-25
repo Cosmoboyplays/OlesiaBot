@@ -54,6 +54,7 @@ async def start():
     finally:
         await bot.session.close()    
 
+
 if __name__ == '__main__':
     asyncio.run(start())
 
