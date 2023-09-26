@@ -5,6 +5,8 @@ from core.keyboards.reply import get_reply_keyboard
 from datetime import datetime
 from core.database.loader import session_maker
 from core.database.models.bot_users import Bot_users
+from sqlalchemy import select, insert
+
 import os 
 
 
@@ -60,12 +62,28 @@ async def get_free_text(message: Message, bot: Bot):
 
 
 async def save_in_db(message: Message, bot: Bot):
-    with session_maker() as db_session:
-        if not db_session.query(Bot_users).filter_by(tg_id=message.from_user.id).first():
-            db_session.add(Bot_users(tg_id=message.from_user.id, name=message.from_user.first_name) )
-            db_session.commit()
+    async with session_maker() as db_session:
+        if not list(await db_session.execute(select(Bot_users).filter_by(tg_id=message.from_user.id))):
+            await db_session.execute(
+                insert(Bot_users).values(tg_id=message.from_user.id, 
+                                        name=message.from_user.first_name)
+            )
+            await db_session.commit()
             await message.answer('id занесен в базу')  
         else:
             await message.answer('id уже был в базе')      
 
-              
+
+# async def save_in_db(message: Message, bot: Bot):
+#     async with session_maker() as db_session:
+#         async with db_session.begin():
+#             exists = await db_session.scalar(
+#                 select(exists().where(Bot_users.tg_id == message.from_user.id))
+#             )
+#             if not exists:
+#                 await db_session.merge(
+#                     Bot_users(tg_id=message.from_user.id, name=message.from_user.first_name)
+#                 )
+#                 await message.answer('id занесен в базу')
+#             else:
+#                 await message.answer('id уже был в базе')              

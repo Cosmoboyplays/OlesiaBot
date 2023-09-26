@@ -1,11 +1,10 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
-engine = create_engine(
-    'mysql+pymysql://root:.Cosmos534534@localhost/TelegramBot'
-)
+engine = create_async_engine(
+            'mysql+aiomysql://root:.Cosmos534534@localhost/TelegramBot',
+            pool_pre_ping=True,)
 
-session_maker = sessionmaker(
-    bind=engine, autoflush=False,
+session_maker = async_sessionmaker(
+    bind=engine, autoflush=False, class_=AsyncSession,
     autocommit=False, expire_on_commit=False
 )
