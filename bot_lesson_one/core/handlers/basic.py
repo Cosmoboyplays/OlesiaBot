@@ -3,6 +3,8 @@ from aiogram.types import Message
 from core.keyboards.reply import reply_keyboard, reply_keyboard2, loc_tel_q, get_reply_keyboard
 from core.keyboards.inline import select_course, get_inline_keyboard
 from datetime import datetime
+from core.database.loader import session_maker
+from core.database.models.bot_users import Bot_users
 import os 
 
 
@@ -54,4 +56,13 @@ async def get_inline(message: Message, bot: Bot):
                           reply_markup=select_course) # reply_markup=select_course
     
 async def get_free_text(message: Message, bot: Bot):
-    await message.answer('Ты отправил свободный текст')      
+    await message.answer('Ты отправил свободный текст')    
+
+
+async def save_in_db(message: Message, bot: Bot):
+    with session_maker() as db_session:
+        db_session.add(Bot_users(tg_id=message.from_user.id, name=message.from_user.first_name) )
+        db_session.commit()
+    await message.answer('id занесен в базу')    
+
+              

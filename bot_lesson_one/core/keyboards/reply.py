@@ -72,7 +72,7 @@ def get_reply_keyboard():
 
     k_b.button(text='Кнопка 1')
     k_b.button(text='Кнопка 2')
-    k_b.button(text='Кнопка 3')
+    k_b.button(text='Сохрани контакт')
     k_b.button(text='Локация', request_location=True)
     k_b.button(text='Мой контакт', request_contact=True)
 

@@ -5,7 +5,7 @@ from aiogram.types import Message
 from aiogram.filters import Command
 
 from core.handlers.basic import get_start, get_photo, get_hello, get_contact, get_keyboard, get_location, get_another_keyboard, get_free_text
-from core.handlers.basic import get_inline
+from core.handlers.basic import get_inline, save_in_db
 from core.settings import settings
 from core.utils.commands import set_commands
 from core.handlers.callback import select_course 
@@ -48,6 +48,7 @@ async def start():
     dp.message.register(get_hello, F.text.lower().in_({'здрасте','привет'}))                 # тут можно и регулярки использовать
     dp.message.register(get_location, F.location)
     dp.message.register(get_contact, F.contact)
+    dp.message.register(save_in_db, F.text=='Сохрани контакт' )  
     dp.message.register(get_free_text, lambda message: re.fullmatch(r'.+', message.text))    # соответсвует любому тексту отправленном пользователем 
     try:
         await dp.start_polling(bot)
