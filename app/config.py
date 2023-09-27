@@ -10,9 +10,8 @@ BASE_DIR = Path(__file__).resolve().parent
 
 @dataclass
 class BotConfig:
-    TOKEN: str
+    BOT_TOKEN: str
     DEV_ID: int
-
 
 
 @dataclass
@@ -36,7 +35,7 @@ def load_config() -> Config:
 
     return Config(
         bot=BotConfig(
-            TOKEN=env.str("BOT_TOKEN"),
+            BOT_TOKEN=env.str("BOT_TOKEN"),
             DEV_ID=env.int("DEV_ID"),
         ),
         db=DatabaseConfig(
@@ -45,5 +44,5 @@ def load_config() -> Config:
             NAME=env.str("DB_NAME"),
             USER=env.str("DB_USER"),
             PASS=env.str("DB_PASS"),
-         )
+        )
     )
