@@ -4,17 +4,17 @@ from aiogram import Bot, Dispatcher, F
 from aiogram.types import Message
 from aiogram.filters import Command
 
-from core.handlers.basic import get_start, get_photo, get_another_keyboard, get_free_text
-from core.handlers.basic import save_in_db
-from core.settings import settings
-from core.utils.commands import set_commands
-from core.handlers.callback import select_course 
+from app.core.handlers.basic import get_start, get_photo, get_another_keyboard, get_free_text
+from app.core.handlers.basic import save_in_db
+from app.core.settings import settings
+from app.core.utils.commands import set_commands
+from app.core.handlers.callback import select_course 
 
 import asyncio
 import logging
 import re
 
-from core.middleware.countermiddleware import CounterMiddleware
+from app.core.middleware.countermiddleware import CounterMiddleware
  
 
 async def start_bot(bot: Bot):
@@ -23,6 +23,7 @@ async def start_bot(bot: Bot):
 
 
 async def stop_bot(bot: Bot):
+    
     await bot.send_message(settings.bots.admin_id, text='Уважаемый админ, бот остановлен')    
 
 

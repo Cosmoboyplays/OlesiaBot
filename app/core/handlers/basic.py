@@ -1,10 +1,10 @@
 from aiogram import Bot
 from aiogram.types import Message
-from core.keyboards.reply import get_reply_keyboard
+from app.core.keyboards.reply import get_reply_keyboard
 # from core.keyboards.inline import select_course, get_inline_keyboard
 from datetime import datetime
-from core.database.loader import session_maker
-from core.database.models.bot_users import Bot_users
+from app.core.database.loader import session_maker
+from app.core.database.models.bot_users import Bot_users
 from sqlalchemy import select, insert
 
 import os 

@@ -2,6 +2,8 @@
 
 from environs import Env
 from dataclasses import dataclass
+from ..config import BotConfig
+
 
 @dataclass
 class Bots:
@@ -13,18 +15,18 @@ class Settings:
     bots: Bots
 
 
-def get_settings(path: str):
+def get_settings(config: BotConfig):
     env = Env()
-    env.read_env(path)
+    # env.read_env(path)
 
     return Settings(
         bots=Bots(
-            bot_token=env.str("TOKEN"), 
-            admin_id=env.int("ADMIN_ID")
+            bot_token=env.str(config.TOKEN), 
+            admin_id=env.int(config.DEV_ID)
         )
     )        
 
-settings = get_settings('bot_lesson_one/input')
+settings = get_settings(BotConfig)
 
 """ В целом, данный код используется для загрузки настроек из файла .env
 и создания объекта класса Settings, который содержит эти настройки. 
