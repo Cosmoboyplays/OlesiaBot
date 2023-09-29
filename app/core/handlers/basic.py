@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import Config
 from app.core.database.models.users import UserModel
 from app.core.keyboards.reply import get_reply_keyboard
+from app.core.keyboards.inline import  select_course
 from datetime import datetime
 from sqlalchemy import select, insert
 
@@ -54,9 +55,9 @@ async def get_another_keyboard(message: Message, bot: Bot):
 #     else:
 #         await message.answer(f'Ты отправил <b>не свой</b> контакт {message.contact.phone_number}')    
 
-# async def get_inline(message: Message, bot: Bot):
-#     await message.answer(f'Привет {message.from_user.first_name}, показываю inline клавиатуру',
-#                           reply_markup=select_course) # reply_markup=select_course
+async def get_inline(message: Message, bot: Bot):
+    await message.answer(f'Привет {message.from_user.first_name}, показываю inline клавиатуру',
+                          reply_markup=select_course) # reply_markup=select_course
 
 
 async def get_free_text(message: Message, bot: Bot):

@@ -3,7 +3,7 @@ from aiogram.filters import Command
 
 from app.config import load_config
 from app.core.database.database import Database
-from app.core.handlers.basic import get_start, get_photo, get_another_keyboard, get_free_text
+from app.core.handlers.basic import get_start, get_photo, get_another_keyboard, get_free_text, get_inline
 from app.core.handlers.basic import save_in_db
 from app.core.middleware.config import ConfigMiddleware
 from app.core.middleware.database import DBSessionMiddleware
@@ -48,7 +48,7 @@ async def start():
     dp.startup.register(start_bot)
     dp.shutdown.register(stop_bot)
 
-    # dp.message.register(get_inline, Command(commands='inline') )
+    dp.message.register(get_inline, Command(commands='inline') )
     dp.callback_query.register(select_course, F.data.startswith('Информация'))
 
     dp.message.register(get_start, Command(commands=['start', 'run']))
