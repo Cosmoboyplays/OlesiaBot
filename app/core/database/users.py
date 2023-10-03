@@ -1,6 +1,7 @@
-from app.core.database.models import Base
 from sqlalchemy import Integer, Text, Column
+from sqlalchemy.orm import declarative_base
 
+Base = declarative_base()
 
 class UserModel(Base):
     __tablename__ = "users"

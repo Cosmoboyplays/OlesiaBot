@@ -3,16 +3,28 @@ from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import Config
-from app.core.database.models.users import UserModel
+from app.core.database.users import UserModel
 from app.core.keyboards.reply import get_reply_keyboard
 from app.core.keyboards.inline import  select_course
 from datetime import datetime
 from sqlalchemy import select, insert
 
+import requests
 import os
 
+API_CATS_URL = 'https://api.thecatapi.com/v1/images/search'
 
-async def get_start(message: Message, bot: Bot, counter: str):
+async def get_cat(message: Message, bot: Bot):
+    await bot.send_photo(message.chat.id, photo=requests.get(API_CATS_URL).json()[0]['url'])
+
+
+async def get_start(message: Message, bot: Bot, counter: str, session: AsyncSession):
+    if not list(await session.execute(select(UserModel).filter_by(tg_id=message.from_user.id))):
+        await session.execute(
+            insert(UserModel).values(tg_id=message.from_user.id,
+                                     name=message.from_user.first_name)
+        )
+        await session.commit()
     await message.answer(f'Сообщение #{counter}')
     await message.answer(f'Привет <b>{message.from_user.first_name}. </b>',
                          reply_markup=get_reply_keyboard())  # просто ответ | второй аргумент это клава
@@ -64,16 +76,16 @@ async def get_free_text(message: Message, bot: Bot):
     await message.answer('Ты отправил свободный текст')
 
 
-async def save_in_db(message: Message, bot: Bot, session: AsyncSession):
-    if not list(await session.execute(select(UserModel).filter_by(tg_id=message.from_user.id))):
-        await session.execute(
-            insert(UserModel).values(tg_id=message.from_user.id,
-                                     name=message.from_user.first_name)
-        )
-        await session.commit()
-        await message.answer('id занесен в базу')
-    else:
-        await message.answer('id уже был в базе')
+# async def save_in_db(message: Message, bot: Bot, session: AsyncSession):
+#     if not list(await session.execute(select(UserModel).filter_by(tg_id=message.from_user.id))):
+#         await session.execute(
+#             insert(UserModel).values(tg_id=message.from_user.id,
+#                                      name=message.from_user.first_name)
+#         )
+#         await session.commit()
+#         await message.answer('id занесен в базу')
+#     else:
+#         await message.answer('id уже был в базе')
 
         # async def save_in_db(message: Message, bot: Bot):
 #     async with session() as session:

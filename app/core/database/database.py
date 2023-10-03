@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
-from . import models
+from . import users
 from ...config import DatabaseConfig
 
 
@@ -24,7 +24,7 @@ class Database:
 
     async def init(self) -> 'Database':
         async with self.engine.begin() as connection:
-            await connection.run_sync(models.Base.metadata.create_all)
+            await connection.run_sync(users.Base.metadata.create_all)
         return self
 
     async def close(self) -> None:
