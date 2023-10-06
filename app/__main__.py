@@ -7,13 +7,11 @@ from app.core.handlers.basic import get_start, get_free_text, get_cat, send_in_a
 from app.core.middleware.dbmiddleware import DBSessionMiddleware
 from app.core.utils.commands import set_commands
 
-
 import asyncio
 import logging
 import re
 
 from app.core.middleware.countermiddleware import CounterMiddleware
-from app.texts import Text
 
 
 config = load_config()
