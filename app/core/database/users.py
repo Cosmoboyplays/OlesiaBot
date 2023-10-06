@@ -11,4 +11,4 @@ class UserModel(Base):
     name = Column(Text(250), nullable=False)
     
     def __repr__(self):
-        return "<{}:{}>".format(id, self.name)
+        return "({}, {})".format(self.id, repr(self.name))

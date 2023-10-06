@@ -1,3 +1,4 @@
+import asyncio
 from aiogram import Bot
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,32 +26,48 @@ async def get_start(message: Message, bot: Bot, counter: str, session: AsyncSess
                                      name=message.from_user.first_name)
         )
         await session.commit()
-    await message.answer(f'Сообщение #{counter}')
-    await message.answer(f'Привет <b>{message.from_user.first_name}. </b>',
+    # await message.answer(f'Сообщение #{counter}')
+    await message.answer(f'Привет <b>{message.from_user.first_name}. </b>\nСкоро тут будет запись на курсы, мы оповестим тебя о ней.\nПока могу отправить кота :)',
                          reply_markup=get_reply_keyboard())  # просто ответ | второй аргумент это клава
     # await message.reply(f'Привет <b>{message.from_user.first_name}. </b>') # ответ с пересланным 
 
+async def get_free_text(message: Message, bot: Bot):
+    await message.answer('Я не умею на такое отвечать, могу прислать кота', reply_markup=get_reply_keyboard())
 
-async def get_photo(message: Message, bot: Bot):
-    """Если получает фотку, то создает папку, если не создана с именем ID юзера, 
-    и закидывает фотку в эту папку, название фотки - дата и время отправки.
-    """
-    await message.answer(f'<em>Ты отправил картинку, я сохраню ее</em>')
-    file = await bot.get_file(message.photo[-1].file_id)
-    if not os.path.exists(f'users_photos/{message.from_user.id}'):
-        print('####')
-        os.chdir('users_photos')
-        os.mkdir(f'{message.from_user.id}')
-        os.chdir("/Users/Nikita/Desktop/New_profession/Боты")
-    await bot.download_file(file.file_path, f'users_photos/{message.from_user.id}/{datetime.now()}+.jpg')
+
+
+
+async def send_in_all_chat(message: Message, bot: Bot, session: AsyncSession):
+    count = 0
+    # Извлечение всех строк из таблицы
+    query = select(UserModel.id, UserModel.tg_id, UserModel.name)
+    result = await session.execute(query)
+    for row in result:
+        await bot.send_message(row[1], 'Это рассылка из базы')
+        count += 1
+        await asyncio.sleep(.05)
+
+
+# async def get_photo(message: Message, bot: Bot):
+#     """Если получает фотку, то создает папку, если не создана с именем ID юзера, 
+#     и закидывает фотку в эту папку, название фотки - дата и время отправки.
+#     """
+#     await message.answer(f'<em>Ты отправил картинку, я сохраню ее</em>')
+#     file = await bot.get_file(message.photo[-1].file_id)
+#     if not os.path.exists(f'users_photos/{message.from_user.id}'):
+#         print('####')
+#         os.chdir('users_photos')
+#         os.mkdir(f'{message.from_user.id}')
+#         os.chdir("/Users/Nikita/Desktop/New_profession/Боты")
+#     await bot.download_file(file.file_path, f'users_photos/{message.from_user.id}/{datetime.now()}+.jpg')
 
 
 # async def get_keyboard(message: Message, bot: Bot):
 #     await message.answer('Вот интересная клава', reply_markup=loc_tel_q) 
 
 
-async def get_another_keyboard(message: Message, bot: Bot):
-    await message.answer('Вот другая интересная клава', reply_markup=get_reply_keyboard())
+# async def get_another_keyboard(message: Message, bot: Bot):
+#     await message.answer('Вот другая интересная клава', reply_markup=get_reply_keyboard())
 
 
 # async def get_location(message: Message, bot: Bot):
@@ -67,13 +84,10 @@ async def get_another_keyboard(message: Message, bot: Bot):
 #     else:
 #         await message.answer(f'Ты отправил <b>не свой</b> контакт {message.contact.phone_number}')    
 
-async def get_inline(message: Message, bot: Bot):
-    await message.answer(f'Привет {message.from_user.first_name}, показываю inline клавиатуру',
-                          reply_markup=select_course) # reply_markup=select_course
+# async def get_inline(message: Message, bot: Bot):
+#     await message.answer(f'Привет {message.from_user.first_name}, показываю inline клавиатуру',
+#                           reply_markup=select_course) # reply_markup=select_course
 
-
-async def get_free_text(message: Message, bot: Bot):
-    await message.answer('Ты отправил свободный текст')
 
 
 # async def save_in_db(message: Message, bot: Bot, session: AsyncSession):

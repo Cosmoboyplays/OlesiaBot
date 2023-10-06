@@ -69,9 +69,9 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 def get_reply_keyboard():
     k_b = ReplyKeyboardBuilder()
-
-    k_b.button(text='Сохрани контакт')
     k_b.button(text='Отправь кота')
+    # k_b.button(text='Рассылка')
+    # k_b.button(text='Сохрани контакт')
     # k_b.button(text='Локация', request_location=True)
     # k_b.button(text='Мой контакт', request_contact=True)
     k_b.adjust(1)

@@ -3,10 +3,10 @@ from aiogram.filters import Command
 
 from app.config import load_config
 from app.core.database.database import Database
-from app.core.handlers.basic import get_start, get_photo, get_another_keyboard, get_free_text, get_inline, get_cat
+from app.core.handlers.basic import get_start, get_free_text, get_cat, send_in_all_chat
 from app.core.middleware.dbmiddleware import DBSessionMiddleware
 from app.core.utils.commands import set_commands
-from app.core.handlers.callback import select_course
+
 
 import asyncio
 import logging
@@ -23,12 +23,12 @@ db = Database(config.db)
 async def start_bot(bot: Bot):
     await db.init()
     await set_commands(bot)
-    await bot.send_message(config.bot.DEV_ID, text=Text.ON_STARTUP)
+    await bot.send_message(config.bot.DEV_ID, text='Уважаемый админ, бот запущен')
 
 
 async def stop_bot(bot: Bot):
     await db.close()
-    await bot.send_message(config.bot.DEV_ID, text=Text.ON_SHUTDOWN)
+    await bot.send_message(config.bot.DEV_ID, text='Уважаемый админ, бот остановлен')
 
 
 async def start():
@@ -45,16 +45,17 @@ async def start():
     dp.startup.register(start_bot)
     dp.shutdown.register(stop_bot)
 
-    dp.message.register(get_inline, Command(commands='inline') )
-    dp.callback_query.register(select_course, F.data.startswith('Информация'))
+    # dp.message.register(get_inline, Command(commands='inline') )
+    # dp.callback_query.register(select_course, F.data.startswith('Информация'))
 
     dp.message.register(get_start, Command(commands=['start', 'run']))
-    dp.message.register(get_another_keyboard, F.text == 'Покажи другую интересную клавиатуру')
-    dp.message.register(get_photo, F.photo)
     dp.message.register(get_cat, F.text == 'Отправь кота')
+    # dp.message.register(send_in_all_chat, F.text == 'Рассылка',
+    #                     F.chat.id == config.bot.DEV_ID)
+    dp.message.register(get_free_text, F.text) # соответсвует любому тексту отправленном пользователем
 
-    dp.message.register(get_free_text, F.text)
-    # соответсвует любому тексту отправленном пользователем
+    # dp.message.register(get_another_keyboard, F.text == 'Покажи другую интересную клавиатуру')
+    # dp.message.register(get_photo, F.photo)
     
     # dp.message.register(get_keyboard, F.text=='Покажи интересную клавиатуру')
     # тут можно и регулярки использовать

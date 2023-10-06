@@ -1,0 +1,8 @@
+BOT_TOKEN='6605649011:AAHQfq792ptICXvmu2a8FAKatNkPSNHc0Ko'
+DEV_ID=352438062
+
+DB_HOST='localhost'
+DB_PORT='mysql+aiomysql'
+DB_NAME='Rating'
+DB_USER='root'
+DB_PASS='.Cosmos534534'
