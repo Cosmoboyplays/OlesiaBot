@@ -2,10 +2,11 @@ import asyncio
 from aiogram import Bot
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.config import load_config
 
 from app.config import Config
 from app.core.database.users import UserModel
-from app.core.keyboards.reply import get_reply_keyboard
+from app.core.keyboards.reply import get_admin_reply, get_cat_reply, get_main_reply
 from app.core.keyboards.inline import  select_course
 from datetime import datetime
 from sqlalchemy import select, insert
@@ -14,26 +15,57 @@ import requests
 import os
 
 API_CATS_URL = 'https://api.thecatapi.com/v1/images/search'
+config = load_config()
 
-async def get_cat(message: Message, bot: Bot):
+async def get_cat(message: Message, bot: Bot, session: AsyncSession):
     await bot.send_photo(message.chat.id, photo=requests.get(API_CATS_URL).json()[0]['url'])
+    await asyncio.sleep(2)
+
+    result = await session.execute(select(UserModel).filter_by(tg_id=message.from_user.id))
+    user = result.scalar_one_or_none()
+    if user.course == None:
+        await message.answer(f'Хочешь записаться на курс по изучению иностранного языка или в разговорный клуб?',
+                            reply_markup=get_main_reply())
+    else:
+        await message.answer(f'Хочешь кота?',
+                            reply_markup=get_cat_reply())
 
 
+    
 async def get_start(message: Message, bot: Bot, counter: str, session: AsyncSession):
-    if not list(await session.execute(select(UserModel).filter_by(tg_id=message.from_user.id))):
-        await session.execute(
-            insert(UserModel).values(tg_id=message.from_user.id,
-                                     name=message.from_user.first_name)
-        )
-        await session.commit()
+    if message.from_user.id==config.bot.DEV_ID:
+         await message.answer(f'Ты здесь босс, что делаем?',
+                         reply_markup=get_admin_reply())
+       
+    else:
+        if not list(await session.execute(select(UserModel).filter_by(tg_id=message.from_user.id))):
+            await session.execute(insert(UserModel).values(tg_id=message.from_user.id,
+                                                            name=message.from_user.username
+                                                          )
+                                 )
+        await session.commit()   
+        await message.answer(f'Привет <b>{message.from_user.first_name}.</b>\nХочешь записаться на курс по изучению иностранного языка или в разговорный клуб?\r\nМогу просто отправить кота ;)',
+                            reply_markup=get_main_reply())
+    
+
+
     # await message.answer(f'Сообщение #{counter}')
-    await message.answer(f'Привет <b>{message.from_user.first_name}. </b>\nСкоро тут будет запись на курсы, мы оповестим тебя о ней.\nПока могу отправить кота :)',
-                         reply_markup=get_reply_keyboard())  # просто ответ | второй аргумент это клава
+    # await message.answer(f'Привет <b>{message.from_user.first_name}. </b>\nСкоро тут будет запись на курсы, мы оповестим тебя о ней.\nПока могу отправить кота :)',
+    #                      reply_markup=get_reply_keyboard())  # просто ответ | второй аргумент это клава
     # await message.reply(f'Привет <b>{message.from_user.first_name}. </b>') # ответ с пересланным 
 
-async def get_free_text(message: Message, bot: Bot):
-    await message.answer('Я не умею на такое отвечать, могу прислать кота', reply_markup=get_reply_keyboard())
+async def get_free_text(message: Message, bot: Bot, session: AsyncSession):
+    await message.answer('Я не умею на такое отвечать :(')
+    await asyncio.sleep(2)
 
+    result = await session.execute(select(UserModel).filter_by(tg_id=message.from_user.id))
+    user = result.scalar_one_or_none()
+    if user.course == None:
+        await message.answer(f'Хочешь записаться на курс по изучению иностранного языка или в разговорный клуб?',
+                            reply_markup=get_main_reply())
+    else:
+        await message.answer(f'Хочешь кота?',
+                            reply_markup=get_cat_reply())
 
 
 

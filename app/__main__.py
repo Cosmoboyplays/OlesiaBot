@@ -6,6 +6,8 @@ from app.core.database.database import Database
 from app.core.handlers.basic import get_start, get_free_text, get_cat, send_in_all_chat
 from app.core.middleware.dbmiddleware import DBSessionMiddleware
 from app.core.utils.commands import set_commands
+from app.core.handlers import reg_for_course 
+from app.core.utils.reg_state import StepsForm
 
 import asyncio
 import logging
@@ -28,7 +30,6 @@ async def stop_bot(bot: Bot):
     await db.close()
     await bot.send_message(config.bot.DEV_ID, text='Уважаемый админ, бот остановлен')
 
-
 async def start():
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s - [%(levelname)s] - %(name)s - "
@@ -45,12 +46,20 @@ async def start():
 
     # dp.message.register(get_inline, Command(commands='inline') )
     # dp.callback_query.register(select_course, F.data.startswith('Информация'))
-
     dp.message.register(get_start, Command(commands=['start', 'run']))
+
+
+    dp.message.register(reg_for_course.reg_for_course, F.text == 'Подтвердить выбор курса')
+    dp.message.register(reg_for_course.get_name, StepsForm.GET_NAME)
+    dp.message.register(reg_for_course.get_course, StepsForm.GET_COURSE)
+    dp.message.register(reg_for_course.get_spclub, StepsForm.GET_SPCLUB)
+    dp.message.register(reg_for_course.get_confirm, StepsForm.GET_CONFIRM)
+    
+
     dp.message.register(get_cat, F.text == 'Отправь кота')
-    # dp.message.register(send_in_all_chat, F.text == 'Рассылка',
-    #                     F.chat.id == config.bot.DEV_ID)
-    dp.message.register(get_free_text, F.text) # соответсвует любому тексту отправленном пользователем
+    dp.message.register(send_in_all_chat, F.text.lower() == 'рассылка',
+                        F.chat.id.in_({config.bot.DEV_ID, config.bot.ADMIN_ID})) ### почему так????
+    dp.message.register(get_free_text, F.text) # соответствует любому тексту отправленном пользователем
 
     # dp.message.register(get_another_keyboard, F.text == 'Покажи другую интересную клавиатуру')
     # dp.message.register(get_photo, F.photo)
