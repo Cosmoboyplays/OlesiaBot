@@ -3,19 +3,29 @@ from aiogram import Bot
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import load_config
+from aiogram.fsm.context import FSMContext
 
 from app.config import Config
 from app.core.database.users import UserModel
 from app.core.keyboards.reply import get_admin_reply, get_cat_reply, get_main_reply
 from app.core.keyboards.inline import  select_course
+from app.core.utils.sender_state import StepsAdminForm
+from app.core.database.database import Database
+
 from datetime import datetime
 from sqlalchemy import select, insert
-
 import requests
 import os
 
 API_CATS_URL = 'https://api.thecatapi.com/v1/images/search'
 config = load_config()
+
+
+async def check(message: Message, bot: Bot):
+    if Database.check_table_exists(table_name='Table'):
+        await message.answer('Нет таблицы')
+
+
 
 async def get_cat(message: Message, bot: Bot, session: AsyncSession):
     await bot.send_photo(message.chat.id, photo=requests.get(API_CATS_URL).json()[0]['url'])
@@ -32,10 +42,11 @@ async def get_cat(message: Message, bot: Bot, session: AsyncSession):
 
 
     
-async def get_start(message: Message, bot: Bot, counter: str, session: AsyncSession):
-    if message.from_user.id==config.bot.DEV_ID:
-         await message.answer(f'Ты здесь босс, что делаем?',
-                         reply_markup=get_admin_reply())
+async def get_start(message: Message, bot: Bot, state: FSMContext, session: AsyncSession):
+    if message.from_user.id in (config.bot.ADMIN_ID, config.bot.DEV_ID):
+        await state.set_state(StepsAdminForm.GET_SENDER)
+        await message.answer(f'Ты здесь босс, что делаем?',
+                            reply_markup=get_admin_reply())
        
     else:
         if not list(await session.execute(select(UserModel).filter_by(tg_id=message.from_user.id))):

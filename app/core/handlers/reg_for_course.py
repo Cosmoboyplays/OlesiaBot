@@ -93,20 +93,26 @@ async def get_confirm(message: Message, state: FSMContext, session: AsyncSession
         
         result = await session.execute(select(UserModel).filter_by(tg_id=message.from_user.id))
         user = result.scalar_one_or_none()
-        if user:
-            user.full_name = data['full_name']
-            user.course = data.get("course", "нет")
-            user.sp_club = data["sp_club"]
-            user.arrears = 0
-        await session.commit()
-        
-        s = [[message.from_user.username, data['full_name'], data.get("course", "нет"), data["sp_club"], 0]]
-
-        results = service.spreadsheets().values().append(spreadsheetId = spreadsheet_id, 
-                                                        range="Лист1!A1",
+        try:
+            if user:
+                user.full_name = data['full_name']
+                user.course = data.get("course", "нет")
+                user.sp_club = data["sp_club"]
+                user.arrears = 0
+            await session.commit()
+            # записываем GoogleSheets
+            s = [[message.from_user.id, message.from_user.username, data['full_name'], data.get("course", "нет"), data["sp_club"], 0]]
+            results = service.spreadsheets().values().append(spreadsheetId = spreadsheet_id, 
+                                                        range="Лист1!A2",
                                                         valueInputOption= "USER_ENTERED",
                                                         body={"values":s}
                                                         ).execute()
+        except:
+            await message.answer('Данные не отправлены!Начните с начала')
+
+
+        
+        
 
 
 
