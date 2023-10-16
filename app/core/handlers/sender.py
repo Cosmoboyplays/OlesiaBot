@@ -15,10 +15,12 @@ from app.config import load_config
 config = load_config()
 
 
-async def get_sender(message: Message, state: FSMContext):
+async def get_sender(message: Message, state: FSMContext, sender_list: SenderList):
     if message.text == 'Рассчитать стоимости':
+        await sender_list.calculation()
+    elif message.text == 'Разослать стоимости':
         pass
- 
+
     else: 
         await message.answer(f'Введите название рассылки:')
         await state.update_data(options=message.text)
@@ -70,9 +72,7 @@ async def sender_decide(call: CallbackQuery, bot: Bot, state: FSMContext, sessio
     
     if call.data == 'confirm_sender':
         await call.message.edit_text('Начал рассылку', reply_markup=None)
-        count = await sender_list.broadcaster(message_id, chat_id, name_camp, options)
-
-        # тут рассылка
+        count = await sender_list.broadcaster(message_id, chat_id, name_camp, options, session)
             
     elif call.data == 'cancel_sender':
         await call.message.edit_text('Отменил рассылку', reply_markup=None)   

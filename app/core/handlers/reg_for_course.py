@@ -30,7 +30,7 @@ async def get_name(message: Message, state: FSMContext):
 async def get_course(message: Message, state: FSMContext, bot: Bot):
     if message.text=='Я не знаю':
         await message.answer(f'C вами свяжется Олеся', reply_markup=get_main_reply())
-        await bot.send_message(config.bot.ADMIN_ID, f'Свяжись с {message.from_user.username}, человек не знает курс')
+        await bot.send_message(config.bot.ADMIN_ID, f'Свяжись с @{message.from_user.username}, человек не знает курс')
         await state.clear()
     
     elif message.text=='Я только в разговорный клуб':
@@ -61,8 +61,8 @@ async def get_spclub(message: Message, state: FSMContext, bot: Bot):
         await state.update_data(sp_club='нет')
     elif message.text=='Я не знаю':
         await message.answer(f'C вами свяжется Олеся', reply_markup=get_main_reply())
-        await bot.send_message(config.bot.ADMIN_ID, f'Свяжись с {message.from_user.username}, человек не знает в какой разговорный клуб')    
-        await state.clear()
+        await bot.send_message(config.bot.ADMIN_ID, f'Свяжись с @{message.from_user.username}, человек не знает в какой разговорный клуб')    
+        return await state.clear()
 
     elif message.text not in ('SC 1 "А1-А2" ENG пятница 18:30',
                               'SC 2 "В1-В2" ENG пятница 18:30',
