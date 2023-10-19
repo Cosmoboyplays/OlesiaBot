@@ -4,9 +4,6 @@ from aiogram.exceptions import TelegramRetryAfter
 from app.core.keyboards.reply import get_main_reply
 from app.core.utils.google_api import service, spreadsheet_id
 from app.core.utils.newletters import NewsletterManager
-from sqlalchemy import select, insert
-from app.core.database.users import UserModel
-from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import load_config
 config = load_config()
 
@@ -16,7 +13,7 @@ class SenderList:
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
 
-    async def send_message(self, user_id: int, message_id: int, from_chat_id: int, name_camp: str, options: str):
+    async def send_message(self, user_id, message_id, from_chat_id, name_camp, options: str):
         try:
             if options=='Разослать подтверждение курса/клуба':
                 await self.bot.copy_message(user_id, from_chat_id, message_id, reply_markup=get_main_reply())
@@ -27,10 +24,8 @@ class SenderList:
             return await self.send_message(user_id, message_id, from_chat_id, name_camp, options)    
         
 
-    async def broadcaster(self, message_id:  None, from_chat_id: None, name_camp: None, options: str, session: AsyncSession):
+    async def broadcaster(self, message_id:  None, from_chat_id: None, name_camp: None, options: str, users_ids: list):
         newsletter_manager = NewsletterManager()
-        query = select(UserModel.tg_id) 
-        users_ids = await session.execute(query)
         count = 0
 
         try:     
@@ -38,10 +33,11 @@ class SenderList:
             old_users = newsletter_manager.get_users()  # Список пользователей которым уже было разослано сообщение
 
             for user_id in users_ids:
-                if user_id[0] in old_users:                 # Если пользователю уже было разослано сообщение, ничего не делать (continue)
+                print(user_id)
+                if user_id in old_users:                 # Если пользователю уже было разослано сообщение, ничего не делать (continue)
                     continue
-                await self.send_message(user_id[0], message_id, from_chat_id, name_camp, options)   # Если не было разослано сообщение, то добавить 
-                newsletter_manager.add_user(user_id[0])  
+                await self.send_message(user_id, message_id, from_chat_id, name_camp, options)   # Если не было разослано сообщение, то добавить 
+                newsletter_manager.add_user(user_id)  
                 count += 1                                           # Добавить пользователя в список разосланных
                 await asyncio.sleep(.05)
 
@@ -50,6 +46,7 @@ class SenderList:
         finally:
             # Запись ключа started на false
             newsletter_manager.stop()
+            print('The end')
             return count
 
            
@@ -77,14 +74,43 @@ class SenderList:
                                                                 ]
                                                         }).execute()
             
-            await  self.bot.send_message(config.bot.DEV_ID, text='Расчет окончен')
+            await  self.bot.send_message(config.bot.ADMIN_ID, text='Расчет окончен')
         except Exception:
-            await  self.bot.send_message(config.bot.DEV_ID, text='Либо лист неправильно написан, либо все пропало')
+            await  self.bot.send_message(config.bot.ADMIN_ID, text='Либо лист неправильно написан, либо все пропало')
 
 
 
-    async def send_sum(self, text: str, options: str):
-        pass
+    async def send_sum(self, sheet_name: str, text: str, options: str):
+        users = service.spreadsheets().values().get(spreadsheetId=spreadsheet_id,
+                                                range=f"'{sheet_name}'!A2:F300",         # формат "'Лист2'!A1:E10"
+                                                majorDimension='ROWS'
+                                                ).execute()
+        
+        values = dict([(i[0], i[5]) for i in users['values']])
+        print(values)
+        
+            
+        # newsletter_manager = NewsletterManager()
+        # count = 0
+
+        # try:     
+        #     newsletter_manager.start() # Запись ключа started на true
+        #     old_users = newsletter_manager.get_users()  # Список пользователей которым уже было разослано сообщение
+
+        #     for user_id in users_ids:
+        #         if user_id[0] in old_users:                 # Если пользователю уже было разослано сообщение, ничего не делать (continue)
+        #             continue
+        #         await self.send_message(user_id[0], message_id, from_chat_id, name_camp, options)   # Если не было разослано сообщение, то добавить 
+        #         newsletter_manager.add_user(user_id[0])  
+        #         count += 1                                           # Добавить пользователя в список разосланных
+        #         await asyncio.sleep(.05)
+
+        # except (Exception,):
+        #     ...
+        # finally:
+        #     # Запись ключа started на false
+        #     newsletter_manager.stop()
+        #     return count
 
         
         

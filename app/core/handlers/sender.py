@@ -2,6 +2,8 @@ from aiogram import Bot
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import CommandObject
+from sqlalchemy import select
+from app.core.database.users import UserModel
 from app.core.handlers.senderlist import SenderList
 from app.core.utils.sender_state import StepsAdminForm
 from app.core.utils.newletters import NewsletterManager
@@ -21,9 +23,9 @@ async def get_sender(message: Message, state: FSMContext):
         await state.set_state(StepsAdminForm.GET_SHEET_NAME)
         await state.update_data(options=message.text)
     elif message.text == 'Разослать стоимости':
-        await message.answer(f'Надеюсь они уже рассчитаны.\r\nНапишите сообщение которое будет прикреплено.\nК вашему сообщению в конце будет добавлена строка "К оплате: 000р."')
+        await message.answer(f'Напиши название листа по которому рассылаем.')
         await state.update_data(options=message.text)
-        await state.set_state(StepsAdminForm.GET_MESSAGE)
+        await state.set_state(StepsAdminForm.GET_SHEET_NAME)
 
     else: 
         await message.answer(f'Введите название рассылки:')
@@ -31,10 +33,22 @@ async def get_sender(message: Message, state: FSMContext):
         await state.set_state(StepsAdminForm.GET_NAME_CAMP)
 
 
+
 async def get_sheet_name(message: Message, state: FSMContext, sender_list: SenderList):
     await message.answer(f'Название листа: {message.text}\r\n')
-    await state.clear() 
-    await sender_list.calculation(message.text, Bot)
+    data = await state.get_data()
+    if data.get('options')=='Разослать стоимости':
+        await message.answer(f'Надеюсь они уже рассчитаны.\r\nНапишите сообщение которое будет прикреплено.\nК вашему сообщению в конце будет добавлена строка "К оплате: 000р."')
+        await state.update_data(sheet_name=message.text)
+        await state.set_state(StepsAdminForm.GET_MESSAGE)
+
+    else: # если расчет стоимостей  
+        await state.clear() 
+        await sender_list.calculation(message.text)
+
+
+
+    
 
 
 async def get_name_camp(message: Message, state: FSMContext):
@@ -69,10 +83,16 @@ async def sender_decide(call: CallbackQuery, bot: Bot, state: FSMContext, sessio
         data = await state.get_data()
         await call.message.edit_text('Начал рассылку', reply_markup=None)
         if data.get('options')=='Разослать стоимости':
-            sender_list.send_sum(data.get('text') ,data.get('options'))
+            count = await sender_list.send_sum(data.get('sheet_name'), data.get('text'), data.get('options'))
+            await bot.send_message(config.bot.ADMIN_ID, text=f'Рассылка окончена\nРазослал {count} сообщений.')
         else:
-            count = await sender_list.broadcaster(int(data.get('message_id')), int(data.get('chat_id')), data.get('name_camp'), data.get('options'), session)
-            await bot.send_message(config.bot.DEV_ID, text='Рассылка окончена\nРазослал {count} сообщений.')
+            query = select(UserModel.tg_id) 
+            answer = await session.execute(query)
+            users_ids = [i[0] for i in answer]
+            count = await sender_list.broadcaster(int(data.get('message_id')), int(data.get('chat_id')), data.get('name_camp'), data.get('options'), users_ids)
+            print(count)
+            await bot.send_message(config.bot.ADMIN_ID, text=f'Рассылка окончена\nРазослал {count} сообщений.')
+            await bot.send_message(config.bot.DEV_ID, text=f'Рассылка окончена\nРазослал {count} сообщений.')
             
     elif call.data == 'cancel_sender':
         await call.message.edit_text('Отменил рассылку', reply_markup=None)   
