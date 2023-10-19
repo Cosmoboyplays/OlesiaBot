@@ -7,6 +7,8 @@ from app.core.utils.newletters import NewsletterManager
 from sqlalchemy import select, insert
 from app.core.database.users import UserModel
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.config import load_config
+config = load_config()
 
 from pprint import pprint
 
@@ -25,15 +27,11 @@ class SenderList:
             return await self.send_message(user_id, message_id, from_chat_id, name_camp, options)    
         
 
-    async def broadcaster(self, message_id: int, from_chat_id: int, name_camp: str, options: str, session: AsyncSession):
+    async def broadcaster(self, message_id:  None, from_chat_id: None, name_camp: None, options: str, session: AsyncSession):
         newsletter_manager = NewsletterManager()
-
-        # values = service.spreadsheets().values().get(spreadsheetId=spreadsheet_id,
-        #                                      range="'Лист1'!A2:F300",         # формат "'Лист2'!A1:E10"
-        #                                      majorDimension='ROWS'
-        #                                      ).execute()
-        query = select(UserModel.tg_id) # [i[0] for i in values['values'] if len(i)>0]
+        query = select(UserModel.tg_id) 
         users_ids = await session.execute(query)
+        count = 0
 
         try:     
             newsletter_manager.start() # Запись ключа started на true
@@ -43,7 +41,8 @@ class SenderList:
                 if user_id[0] in old_users:                 # Если пользователю уже было разослано сообщение, ничего не делать (continue)
                     continue
                 await self.send_message(user_id[0], message_id, from_chat_id, name_camp, options)   # Если не было разослано сообщение, то добавить 
-                newsletter_manager.add_user(user_id[0])                                     # Добавить пользователя в список разосланных
+                newsletter_manager.add_user(user_id[0])  
+                count += 1                                           # Добавить пользователя в список разосланных
                 await asyncio.sleep(.05)
 
         except (Exception,):
@@ -51,31 +50,45 @@ class SenderList:
         finally:
             # Запись ключа started на false
             newsletter_manager.stop()
-            print('Рассылка закончена')
+            return count
 
            
-    async def calculation(self):
-        values = service.spreadsheets().values().get(spreadsheetId=spreadsheet_id,
-                                             range="'Лист1'!H2:J18",         # формат "'Лист2'!A1:E10"
+    async def calculation(self, sheet_name):
+        try:
+            users = service.spreadsheets().values().get(spreadsheetId=spreadsheet_id,
+                                                range=f"'{sheet_name}'!A2:E300",         # формат "'Лист2'!A1:E10"
+                                                majorDimension='ROWS'
+                                                ).execute()
+            
+            values = service.spreadsheets().values().get(spreadsheetId=spreadsheet_id,
+                                             range="'Стоимости'!A2:C18",         # формат "'Лист2'!A1:E10"
                                              majorDimension='ROWS'
                                              ).execute()
-        course_data = dict([(i[0], i[1]) for i in values['values'] if len(i)>0])
+            course_data = dict([(i[0], i[1]) for i in values['values'] if len(i)>0])
 
-        users = service.spreadsheets().values().get(spreadsheetId=spreadsheet_id,
-                                             range="'Лист1'!A2:E300",         # формат "'Лист2'!A1:E10"
-                                             majorDimension='ROWS'
-                                             ).execute()
+            new_sp = [i + [int(course_data.get(i[3], 0)) + int(course_data.get(i[4], 0))] for i in users['values'] if len(i) > 0]
+            
+            users = service.spreadsheets().values().batchUpdate(spreadsheetId=spreadsheet_id,
+                                                body = {"valueInputOption": "USER_ENTERED",
+                                                        "data": [
+                                                                {"range": f"'{sheet_name}'!A2:F300",
+                                                                "majorDimension": "ROWS",     # сначала заполнять ряды, затем столбцы (т.е. самые внутренние списки в values - это ряды)
+                                                                "values": new_sp}
+                                                                ]
+                                                        }).execute()
+            
+            await  self.bot.send_message(config.bot.DEV_ID, text='Расчет окончен')
+        except Exception:
+            await  self.bot.send_message(config.bot.DEV_ID, text='Либо лист неправильно написан, либо все пропало')
+
+
+
+    async def send_sum(self, text: str, options: str):
+        pass
+
         
-        new_sp = [i + [int(course_data.get(i[3], 0)) + int(course_data.get(i[4], 0))] for i in users['values'] if len(i) > 0]
         
-        users = service.spreadsheets().values().batchUpdate(spreadsheetId=spreadsheet_id,
-                                             body = {"valueInputOption": "USER_ENTERED",
-                                                    "data": [
-                                                            {"range": "A2:F300",
-                                                            "majorDimension": "ROWS",     # сначала заполнять ряды, затем столбцы (т.е. самые внутренние списки в values - это ряды)
-                                                            "values": new_sp}
-                                                            ]
-                                                    }).execute()
+
         
     # async def send_calc(self):
     #     users = service.spreadsheets().values().get(spreadsheetId=spreadsheet_id,

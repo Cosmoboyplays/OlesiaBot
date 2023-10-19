@@ -3,7 +3,7 @@ from aiogram.filters import Command
 
 from app.config import load_config
 from app.core.database.database import Database
-from app.core.handlers.basic import get_start, get_free_text, get_cat, send_in_all_chat, check
+from app.core.handlers.basic import get_start, get_free_text, get_cat, send_in_all_chat
 from app.core.middleware.dbmiddleware import DBSessionMiddleware
 from app.core.utils.commands import set_commands
 from app.core.handlers import reg_for_course, sender
@@ -49,7 +49,6 @@ async def start():
     # dp.message.register(get_inline, Command(commands='inline') )
     # dp.callback_query.register(select_course, F.data.startswith('Информация'))
     dp.message.register(get_start, Command(commands=['start', 'run']))
-    dp.message.register(check, F.text == 'П')
     # регистрация
     dp.message.register(reg_for_course.reg_for_course, F.text == 'Подтвердить выбор курса')
     dp.message.register(reg_for_course.get_name, StepsForm.GET_NAME)
@@ -63,6 +62,9 @@ async def start():
                         F.chat.id.in_({config.bot.DEV_ID, config.bot.ADMIN_ID}))
     dp.message.register(sender.get_message, StepsAdminForm.GET_MESSAGE,
                         F.chat.id.in_({config.bot.DEV_ID, config.bot.ADMIN_ID}))
+    dp.message.register(sender.get_sheet_name, StepsAdminForm.GET_SHEET_NAME,
+                        F.chat.id.in_({config.bot.DEV_ID, config.bot.ADMIN_ID}))
+    
     dp.callback_query.register(sender.sender_decide, F.data.in_(['confirm_sender', 'cancel_sender']))
     # dp.message.register(sender.get_confirm, StepsAdminForm.GET_CONFIRM,
     #                     F.chat.id.in_({config.bot.DEV_ID, config.bot.ADMIN_ID}))
