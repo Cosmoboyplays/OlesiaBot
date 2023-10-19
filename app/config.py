@@ -32,7 +32,7 @@ class Config:
 
 def load_config() -> Config:
     env = Env()
-    env.read_env()
+    env.read_env(".env")
 
     return Config(
         bot=BotConfig(

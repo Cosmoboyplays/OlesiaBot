@@ -48,9 +48,6 @@ async def get_sheet_name(message: Message, state: FSMContext, sender_list: Sende
 
 
 
-    
-
-
 async def get_name_camp(message: Message, state: FSMContext):
     await message.answer(f'Имя компании: {message.text}\r\nНапишите сообщение для рассылки')
     await state.update_data(name_camp=message.text)
@@ -82,18 +79,19 @@ async def sender_decide(call: CallbackQuery, bot: Bot, state: FSMContext, sessio
     if call.data == 'confirm_sender':
         data = await state.get_data()
         await call.message.edit_text('Начал рассылку', reply_markup=None)
+       
         if data.get('options')=='Разослать стоимости':
             count = await sender_list.send_sum(data.get('sheet_name'), data.get('text'), data.get('options'))
             await bot.send_message(config.bot.ADMIN_ID, text=f'Рассылка окончена\nРазослал {count} сообщений.')
+            await bot.send_message(config.bot.DEV_ID, text=f'Рассылка окончена\nРазослал {count} сообщений.')
         else:
             query = select(UserModel.tg_id) 
             answer = await session.execute(query)
             users_ids = [i[0] for i in answer]
-            count = await sender_list.broadcaster(int(data.get('message_id')), int(data.get('chat_id')), data.get('name_camp'), data.get('options'), users_ids)
-            print(count)
-            await bot.send_message(config.bot.ADMIN_ID, text=f'Рассылка окончена\nРазослал {count} сообщений.')
-            await bot.send_message(config.bot.DEV_ID, text=f'Рассылка окончена\nРазослал {count} сообщений.')
-            
+            count = await sender_list.broadcaster(message_id=int(data.get('message_id')), from_chat_id=int(data.get('chat_id')), name_camp=data.get('name_camp'), options=data.get('options'), users_ids=users_ids)          
+            await bot.send_message(config.bot.ADMIN_ID, text=f'Рассылка окончена\nРазослано сообщений:  {count}')
+            await bot.send_message(config.bot.DEV_ID, text=f'Рассылка окончена\nРазослано сообщений:  {count}')
+    
     elif call.data == 'cancel_sender':
         await call.message.edit_text('Отменил рассылку', reply_markup=None)   
 

@@ -7,24 +7,25 @@ from app.core.utils.newletters import NewsletterManager
 from app.config import load_config
 config = load_config()
 
-from pprint import pprint
 
 class SenderList:
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
 
-    async def send_message(self, user_id, message_id, from_chat_id, name_camp, options: str):
+    async def send_message_inner(self, user_id, message_id, from_chat_id, name_camp, options: str, users_ids, text=None ):
         try:
             if options=='Разослать подтверждение курса/клуба':
                 await self.bot.copy_message(user_id, from_chat_id, message_id, reply_markup=get_main_reply())
+            elif options=='Разослать стоимости':
+                await self.bot.send_message(user_id, f'{text}\nК оплате: {users_ids[user_id]}р.')  
             else:    
                 await self.bot.copy_message(user_id, from_chat_id, message_id, reply_markup=None)
         except TelegramRetryAfter as e:
             await asyncio.sleep(e.retry_after)
-            return await self.send_message(user_id, message_id, from_chat_id, name_camp, options)    
+            return await self.send_message_inner(user_id, message_id, from_chat_id, name_camp, options)    
         
 
-    async def broadcaster(self, message_id:  None, from_chat_id: None, name_camp: None, options: str, users_ids: list):
+    async def broadcaster(self, message_id=None, from_chat_id=None, name_camp=None, options=None, users_ids=None, text=None):
         newsletter_manager = NewsletterManager()
         count = 0
 
@@ -33,10 +34,9 @@ class SenderList:
             old_users = newsletter_manager.get_users()  # Список пользователей которым уже было разослано сообщение
 
             for user_id in users_ids:
-                print(user_id)
                 if user_id in old_users:                 # Если пользователю уже было разослано сообщение, ничего не делать (continue)
                     continue
-                await self.send_message(user_id, message_id, from_chat_id, name_camp, options)   # Если не было разослано сообщение, то добавить 
+                await self.send_message_inner(user_id, message_id, from_chat_id, name_camp, options, users_ids, text=text)   # Если не было разослано сообщение, то добавить 
                 newsletter_manager.add_user(user_id)  
                 count += 1                                           # Добавить пользователя в список разосланных
                 await asyncio.sleep(.05)
@@ -46,7 +46,6 @@ class SenderList:
         finally:
             # Запись ключа started на false
             newsletter_manager.stop()
-            print('The end')
             return count
 
            
@@ -61,8 +60,8 @@ class SenderList:
                                              range="'Стоимости'!A2:C18",         # формат "'Лист2'!A1:E10"
                                              majorDimension='ROWS'
                                              ).execute()
+            
             course_data = dict([(i[0], i[1]) for i in values['values'] if len(i)>0])
-
             new_sp = [i + [int(course_data.get(i[3], 0)) + int(course_data.get(i[4], 0))] for i in users['values'] if len(i) > 0]
             
             users = service.spreadsheets().values().batchUpdate(spreadsheetId=spreadsheet_id,
@@ -87,8 +86,8 @@ class SenderList:
                                                 ).execute()
         
         values = dict([(i[0], i[5]) for i in users['values']])
-        print(values)
-        
+        count = await self.broadcaster(options=options, users_ids=values, text=text)
+        return count
             
         # newsletter_manager = NewsletterManager()
         # count = 0
