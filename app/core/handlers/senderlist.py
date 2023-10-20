@@ -14,18 +14,22 @@ from app.config import load_config
 from app.core.utils.reg_state import StepsForm
 config = load_config()
 
-
+from aiogram.fsm.storage.base import StorageKey
 
 class SenderList:
-    def __init__(self, bot: Bot) -> None:
+    def __init__(self, bot: Bot, dp) -> None:
         self.bot = bot
+        self.dp = dp
 
     async def send_message_inner(self, user_id, message_id, from_chat_id, name_camp, options: str, users_ids, text=None ):
         try:
             if options=='Разослать подтверждение курса/клуба':
                 await self.bot.copy_message(user_id, from_chat_id, message_id, reply_markup=get_main_reply())
             elif options=='Разослать стоимости':
-                await self.bot.send_message(user_id, f'{text}\nК оплате: {users_ids[user_id]}р.')  
+                key = StorageKey(bot_id=self.bot.id, chat_id=user_id, user_id=user_id)
+                state = FSMContext(self.dp.storage,  key=key)
+                await self.bot.send_message(user_id, f'{text}\nК оплате: {users_ids[user_id]}р.') 
+                await state.set_state(StepsForm.GET_PAY) 
             else:    
                 await self.bot.copy_message(user_id, from_chat_id, message_id, reply_markup=None)
         except TelegramRetryAfter as e:
@@ -49,8 +53,8 @@ class SenderList:
                 count += 1                                           # Добавить пользователя в список разосланных
                 await asyncio.sleep(.05)
 
-        except (Exception,):
-            ...
+        except Exception as e:
+            print(e)
         finally:
             # Запись ключа started на false
             newsletter_manager.stop()

@@ -13,6 +13,6 @@ from sqlalchemy import select, insert
 
 
 async def get_pay(message: Message, state: FSMContext):
-    await message.answer(f'{message.from_user.first_name}, начинаем регистрацию на курс! Введите имя и фамилию:',
+    await message.answer(f'Получаю фотку или файл или текст в ответ на сумму.',
                          reply_markup=None)
     

@@ -11,13 +11,14 @@ from app.core.handlers import reg_for_course, sender
 from app.core.utils.reg_state import StepsForm
 from app.core.utils.sender_state import StepsAdminForm
 from app.core.handlers.senderlist import SenderList
+from aiogram.fsm.context import FSMContext
 
 import asyncio
 import logging
 import re
 
 from app.core.middleware.countermiddleware import CounterMiddleware
-
+from aiogram.fsm.storage.memory import MemoryStorage
 
 config = load_config()
 db = Database(config.db)
@@ -39,7 +40,9 @@ async def start():
                                "(%(filename)s).%(funcName)s(%(lineno)d) - %(message)s")
 
     bot = Bot(token=config.bot.BOT_TOKEN, parse_mode='HTML')
-    dp = Dispatcher()
+    storage = MemoryStorage()
+    dp = Dispatcher(storage=storage)   
+
 
     dp.message.middleware.register(CounterMiddleware())
     dp.update.middleware.register(DBSessionMiddleware(db.session))
@@ -69,12 +72,22 @@ async def start():
     dp.message.register(get_pay, StepsForm.GET_PAY)
     
     dp.callback_query.register(sender.sender_decide, F.data.in_(['confirm_sender', 'cancel_sender']))
-    # dp.message.register(sender.get_confirm, StepsAdminForm.GET_CONFIRM,
-    #                     F.chat.id.in_({config.bot.DEV_ID, config.bot.ADMIN_ID}))
-    
-
     dp.message.register(get_cat, F.text == 'Отправь кота')
     dp.message.register(get_free_text, F.text) # соответствует любому тексту отправленном пользователем
+    
+    
+    senderlis  = SenderList(bot, dp)
+    try:
+        await dp.start_polling(bot, sender_list=senderlis)
+    finally:
+        await bot.session.close()
+
+
+if __name__ == '__main__':
+    asyncio.run(start())
+
+
+
 
     # dp.message.register(get_another_keyboard, F.text == 'Покажи другую интересную клавиатуру')
     # dp.message.register(get_photo, F.photo)
@@ -84,12 +97,3 @@ async def start():
     # dp.message.register(get_hello, F.text.lower().in_({'здрасте','привет'}))
     # dp.message.register(get_location, F.location)
     # dp.message.register(get_contact, F.contact)
-    sender_lis = SenderList(bot)
-    try:
-        await dp.start_polling(bot, sender_list=sender_lis)
-    finally:
-        await bot.session.close()
-
-
-if __name__ == '__main__':
-    asyncio.run(start())
