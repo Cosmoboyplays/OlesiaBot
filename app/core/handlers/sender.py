@@ -23,12 +23,12 @@ async def get_sender(message: Message, state: FSMContext):
         await state.set_state(StepsAdminForm.GET_SHEET_NAME)
         await state.update_data(options=message.text)
     elif message.text == 'Разослать стоимости':
-        await message.answer(f'Напиши название листа по которому рассылаем.')
+        await message.answer(f'Разослано будет только лишь для тех, кто есть в листе.\nНапиши название листа по которому рассылаем.')
         await state.update_data(options=message.text)
         await state.set_state(StepsAdminForm.GET_SHEET_NAME)
 
     else: 
-        await message.answer(f'Введите название рассылки:')
+        await message.answer(f'Сообщение будет разослано по всей базе юзеров.\nВведите название рассылки:')
         await state.update_data(options=message.text)
         await state.set_state(StepsAdminForm.GET_NAME_CAMP)
 
@@ -61,8 +61,7 @@ async def get_message(message: Message, bot: Bot, state: FSMContext):
         await message.answer(f'{message.text}\nК оплате: 000р.', reply_markup=confirm_keyboard)
 
     else:    
-        await state.update_data(message_id=message.message_id, chat_id=message.from_user.id)
-        
+        await state.update_data(message_id=message.message_id, chat_id=message.from_user.id)  
         data = await state.get_data()
         message_id = int(data.get('message_id'))
         chat_id = int(data.get('chat_id'))
@@ -82,8 +81,8 @@ async def sender_decide(call: CallbackQuery, bot: Bot, state: FSMContext, sessio
        
         if data.get('options')=='Разослать стоимости':
             count = await sender_list.send_sum(data.get('sheet_name'), data.get('text'), data.get('options'))
-            await bot.send_message(config.bot.ADMIN_ID, text=f'Рассылка окончена\nРазослал {count} сообщений.')
-            await bot.send_message(config.bot.DEV_ID, text=f'Рассылка окончена\nРазослал {count} сообщений.')
+            await bot.send_message(config.bot.ADMIN_ID, text=f'Рассылка окончена\nРазослано сообщений:  {count}')
+            await bot.send_message(config.bot.DEV_ID, text=f'Рассылка окончена\nРазослано сообщений:  {count}')
         else:
             query = select(UserModel.tg_id) 
             answer = await session.execute(query)

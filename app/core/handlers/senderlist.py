@@ -21,15 +21,15 @@ class SenderList:
         self.bot = bot
         self.dp = dp
 
-    async def send_message_inner(self, user_id, message_id, from_chat_id, name_camp, options: str, users_ids, text=None ):
+    async def send_message_inner(self, user_id, message_id, from_chat_id, name_camp, options: str, users_ids, text=None):
         try:
             if options=='Разослать подтверждение курса/клуба':
                 await self.bot.copy_message(user_id, from_chat_id, message_id, reply_markup=get_main_reply())
             elif options=='Разослать стоимости':
-                key = StorageKey(bot_id=self.bot.id, chat_id=user_id, user_id=user_id)
-                state = FSMContext(self.dp.storage,  key=key)
-                await self.bot.send_message(user_id, f'{text}\nК оплате: {users_ids[user_id]}р.') 
+                state = FSMContext(self.dp.storage, key=StorageKey(bot_id=self.bot.id, chat_id=int(user_id), user_id=int(user_id)))
+                await self.bot.send_message(user_id, f'{text}\nК оплате: {users_ids[user_id]}р.', reply_markup=None)
                 await state.set_state(StepsForm.GET_PAY) 
+
             else:    
                 await self.bot.copy_message(user_id, from_chat_id, message_id, reply_markup=None)
         except TelegramRetryAfter as e:
@@ -84,13 +84,15 @@ class SenderList:
                                                                 "values": new_sp}
                                                                 ]
                                                         }).execute()
-            
-            for i in new_sp:
-                result = await session.execute(select(UserModel).filter_by(tg_id=i[0]))
-                user = result.scalar_one_or_none()
-                if user:
-                    user.arrears = i[5]
-                await session.commit()
+            try:
+                for i in new_sp:
+                    result = await session.execute(select(UserModel).filter_by(tg_id=i[0]))
+                    user = result.scalar_one_or_none()
+                    if user:
+                        user.arrears = i[5]
+                    await session.commit()
+            except Exception:
+                await  self.bot.send_message(config.bot.ADMIN_ID, text='Не могу писать в базу, зови разраба.')       
 
             await  self.bot.send_message(config.bot.ADMIN_ID, text='Расчет окончен')
         except Exception:

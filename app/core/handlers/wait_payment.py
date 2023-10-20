@@ -11,8 +11,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, insert
 
 
-
-async def get_pay(message: Message, state: FSMContext):
-    await message.answer(f'Получаю фотку или файл или текст в ответ на сумму.',
-                         reply_markup=None)
+async def get_pay(message: Message, state: FSMContext, bot: Bot):   
+    if message.document:
+        await bot.forward_message(config.bot.ADMIN_ID, from_chat_id=message.chat.id, message_id=message.message_id)
+        await state.clear()
+        await message.answer(f'Спасибо админ проверит, и если что свяжется с вами.\nХочешь кота?',
+                            reply_markup=get_cat_reply())
+    elif message.photo:
+        await bot.forward_message(config.bot.ADMIN_ID, from_chat_id=message.chat.id, message_id=message.message_id)
+        await state.clear()
+        await message.answer(f'Спасибо админ проверит, и если что свяжется с вами.\nХочешь кота?',
+                            reply_markup=get_cat_reply())
+    else:
+        await message.answer(f'Я жду скрин! Или файл.',
+                         reply_markup=None)    
+        
     
