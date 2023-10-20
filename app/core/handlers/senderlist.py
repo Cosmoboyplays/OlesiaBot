@@ -4,8 +4,16 @@ from aiogram.exceptions import TelegramRetryAfter
 from app.core.keyboards.reply import get_main_reply
 from app.core.utils.google_api import service, spreadsheet_id
 from app.core.utils.newletters import NewsletterManager
+from aiogram.fsm.context import FSMContext
+
+from app.core.database.users import UserModel
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, insert
+
 from app.config import load_config
+from app.core.utils.reg_state import StepsForm
 config = load_config()
+
 
 
 class SenderList:
@@ -49,7 +57,7 @@ class SenderList:
             return count
 
            
-    async def calculation(self, sheet_name):
+    async def calculation(self, sheet_name, session: AsyncSession):
         try:
             users = service.spreadsheets().values().get(spreadsheetId=spreadsheet_id,
                                                 range=f"'{sheet_name}'!A2:E300",         # формат "'Лист2'!A1:E10"
@@ -57,11 +65,11 @@ class SenderList:
                                                 ).execute()
             
             values = service.spreadsheets().values().get(spreadsheetId=spreadsheet_id,
-                                             range="'Стоимости'!A2:C18",         # формат "'Лист2'!A1:E10"
+                                             range="'Стоимости'!A2:D18",         # формат "'Лист2'!A1:E10"
                                              majorDimension='ROWS'
                                              ).execute()
             
-            course_data = dict([(i[0], i[1]) for i in values['values'] if len(i)>0])
+            course_data = dict([(i[0], i[1]) for i in values['values'] if len(i)>0]) # делаем словарь {'name':'цена'}
             new_sp = [i + [int(course_data.get(i[3], 0)) + int(course_data.get(i[4], 0))] for i in users['values'] if len(i) > 0]
             
             users = service.spreadsheets().values().batchUpdate(spreadsheetId=spreadsheet_id,
@@ -73,6 +81,13 @@ class SenderList:
                                                                 ]
                                                         }).execute()
             
+            for i in new_sp:
+                result = await session.execute(select(UserModel).filter_by(tg_id=i[0]))
+                user = result.scalar_one_or_none()
+                if user:
+                    user.arrears = i[5]
+                await session.commit()
+
             await  self.bot.send_message(config.bot.ADMIN_ID, text='Расчет окончен')
         except Exception:
             await  self.bot.send_message(config.bot.ADMIN_ID, text='Либо лист неправильно написан, либо все пропало')

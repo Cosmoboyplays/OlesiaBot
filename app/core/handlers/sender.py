@@ -34,7 +34,7 @@ async def get_sender(message: Message, state: FSMContext):
 
 
 
-async def get_sheet_name(message: Message, state: FSMContext, sender_list: SenderList):
+async def get_sheet_name(message: Message, state: FSMContext, sender_list: SenderList, session: AsyncSession):
     await message.answer(f'Название листа: {message.text}\r\n')
     data = await state.get_data()
     if data.get('options')=='Разослать стоимости':
@@ -44,7 +44,7 @@ async def get_sheet_name(message: Message, state: FSMContext, sender_list: Sende
 
     else: # если расчет стоимостей  
         await state.clear() 
-        await sender_list.calculation(message.text)
+        await sender_list.calculation(message.text, session)
 
 
 

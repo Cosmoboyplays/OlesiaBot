@@ -5,3 +5,4 @@ class StepsForm(StatesGroup):
     GET_COURSE = State()
     GET_SPCLUB = State()
     GET_CONFIRM = State()
+    GET_PAY = State()
