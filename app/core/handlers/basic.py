@@ -75,15 +75,15 @@ async def get_free_text(message: Message, bot: Bot, session: AsyncSession):
 
 
 
-async def send_in_all_chat(message: Message, bot: Bot, session: AsyncSession):
-    count = 0
-    # Извлечение всех строк из таблицы
-    query = select(UserModel.id, UserModel.tg_id, UserModel.name)
-    result = await session.execute(query)
-    for row in result:
-        await bot.send_message(row[1], 'Это рассылка из базы')
-        count += 1
-        await asyncio.sleep(.05)
+# async def send_in_all_chat(message: Message, bot: Bot, session: AsyncSession):
+#     count = 0
+#     # Извлечение всех строк из таблицы
+#     query = select(UserModel.id, UserModel.tg_id, UserModel.name)
+#     result = await session.execute(query)
+#     for row in result:
+#         await bot.send_message(row[1], 'Это рассылка из базы')
+#         count += 1
+#         await asyncio.sleep(.05)
 
 
 # async def get_photo(message: Message, bot: Bot):

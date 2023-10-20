@@ -3,7 +3,7 @@ from aiogram.filters import Command
 
 from app.config import load_config
 from app.core.database.database import Database
-from app.core.handlers.basic import get_start, get_free_text, get_cat, send_in_all_chat
+from app.core.handlers.basic import get_start, get_free_text, get_cat
 from app.core.middleware.dbmiddleware import DBSessionMiddleware
 from app.core.utils.commands import set_commands
 from app.core.handlers import reg_for_course, sender
