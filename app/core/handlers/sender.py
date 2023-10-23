@@ -26,7 +26,10 @@ async def get_sender(message: Message, state: FSMContext):
         await message.answer(f'Разослано будет только лишь для тех, кто есть в листе.\nНапиши название листа по которому рассылаем.')
         await state.update_data(options=message.text)
         await state.set_state(StepsAdminForm.GET_SHEET_NAME)
-
+    elif message.text == 'Разослать подтверждение курса/клуба':   
+        await message.answer(f'Сообщение будет разослано по всей базе юзеров.\nВведите название листа, куда пишем тех, кто подтвердит:')
+        await state.update_data(options=message.text)
+        await state.set_state(StepsAdminForm.GET_SHEET_NAME)
     else: 
         await message.answer(f'Сообщение будет разослано по всей базе юзеров.\nВведите название рассылки:')
         await state.update_data(options=message.text)
@@ -37,12 +40,15 @@ async def get_sender(message: Message, state: FSMContext):
 async def get_sheet_name(message: Message, state: FSMContext, sender_list: SenderList, session: AsyncSession):
     await message.answer(f'Название листа: {message.text}\r\n')
     data = await state.get_data()
-    if data.get('options')=='Разослать стоимости':
+    if data.get('options')=='Разослать стоимости':      # рассылка стоимостей
         await message.answer(f'Надеюсь они уже рассчитаны.\r\nНапишите сообщение которое будет прикреплено.\nК вашему сообщению в конце будет добавлена строка "К оплате: 000р."')
         await state.update_data(sheet_name=message.text)
         await state.set_state(StepsAdminForm.GET_MESSAGE)
-
-    else: # если расчет стоимостей  
+    elif data.get('options')=='Разослать подтверждение курса/клуба': # подтвержидение 
+        await message.answer(f'Название листа: {message.text}\r\n Напишите сообщение рассылки:')
+        await state.update_data(sheet_name=message.text)
+        await state.set_state(StepsAdminForm.GET_MESSAGE)
+    else:    # если расчет стоимостей  
         await state.clear() 
         await sender_list.calculation(message.text, session)
 
@@ -87,6 +93,7 @@ async def sender_decide(call: CallbackQuery, bot: Bot, state: FSMContext, sessio
             query = select(UserModel.tg_id) 
             answer = await session.execute(query)
             users_ids = [i[0] for i in answer]
+            print(len(users_ids))
             count = await sender_list.broadcaster(message_id=int(data.get('message_id')), from_chat_id=int(data.get('chat_id')), name_camp=data.get('name_camp'), options=data.get('options'), users_ids=users_ids)          
             await bot.send_message(config.bot.ADMIN_ID, text=f'Рассылка окончена\nРазослано сообщений:  {count}')
             await bot.send_message(config.bot.DEV_ID, text=f'Рассылка окончена\nРазослано сообщений:  {count}')

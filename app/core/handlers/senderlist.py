@@ -24,14 +24,17 @@ class SenderList:
     async def send_message_inner(self, user_id, message_id, from_chat_id, name_camp, options: str, users_ids, text=None):
         try:
             if options=='Разослать подтверждение курса/клуба':
-                await self.bot.copy_message(user_id, from_chat_id, message_id, reply_markup=get_main_reply())
+                # await self.bot.copy_message(user_id, from_chat_id, message_id, reply_markup=get_main_reply())
+                print(user_id)
             elif options=='Разослать стоимости':
                 state = FSMContext(self.dp.storage, key=StorageKey(bot_id=self.bot.id, chat_id=int(user_id), user_id=int(user_id)))
                 await self.bot.send_message(user_id, f'{text}\nК оплате: {users_ids[user_id]}р.', reply_markup=None)
                 await state.set_state(StepsForm.GET_PAY) 
+                print(f'send_message_inner {user_id}')
 
             else:    
-                await self.bot.copy_message(user_id, from_chat_id, message_id, reply_markup=None)
+                print(user_id)
+                # await self.bot.copy_message(user_id, from_chat_id, message_id, reply_markup=None)
         except TelegramRetryAfter as e:
             await asyncio.sleep(e.retry_after)
             return await self.send_message_inner(user_id, message_id, from_chat_id, name_camp, options)    
@@ -41,24 +44,26 @@ class SenderList:
         newsletter_manager = NewsletterManager()
         count = 0
 
-        try:     
-            newsletter_manager.start() # Запись ключа started на true
-            old_users = newsletter_manager.get_users()  # Список пользователей которым уже было разослано сообщение
+            
+        newsletter_manager.start() # Запись ключа started на true
+        old_users = newsletter_manager.get_users()  # Список пользователей которым уже было разослано сообщение
 
-            for user_id in users_ids:
-                if user_id in old_users:                 # Если пользователю уже было разослано сообщение, ничего не делать (continue)
-                    continue
+        for user_id in users_ids:
+            if user_id in old_users:                 # Если пользователю уже было разослано сообщение, ничего не делать (continue)
+                print(f'Broad {user_id}')
+                continue
+            print(f'Broad 2 {user_id}')
+            try:
                 await self.send_message_inner(user_id, message_id, from_chat_id, name_camp, options, users_ids, text=text)   # Если не было разослано сообщение, то добавить 
                 newsletter_manager.add_user(user_id)  
                 count += 1                                           # Добавить пользователя в список разосланных
                 await asyncio.sleep(.05)
 
-        except Exception as e:
-            print(e)
-        finally:
-            # Запись ключа started на false
-            newsletter_manager.stop()
-            return count
+            except Exception as e:
+                print("При блокировке:", e)
+            
+        newsletter_manager.stop()
+        return count
 
            
     async def calculation(self, sheet_name, session: AsyncSession):
@@ -107,7 +112,9 @@ class SenderList:
                                                 ).execute()
         
         values = dict([(i[0], i[5]) for i in users['values']])
+        print(values)
         count = await self.broadcaster(options=options, users_ids=values, text=text)
+       
         return count
             
         # newsletter_manager = NewsletterManager()
