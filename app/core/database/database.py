@@ -16,6 +16,7 @@ class Database:
             f"{config.PORT}/"
             f"{config.NAME}",
             pool_pre_ping=True,
+            echo=True,
         )
         self.session = async_sessionmaker(
             bind=self.engine,

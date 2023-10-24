@@ -27,9 +27,9 @@ class NewsletterManager:
         :param user_id:
         :return: 
         """
-        users = self.get_users()
-        users.append(user_id)
-        self._write({"users": users, "started": True})
+        d = self._read()
+        d["users"].append(user_id)
+        self._write(d)
 
     def get_users(self) -> list[int]:
         """
@@ -59,6 +59,18 @@ class NewsletterManager:
         Stop newsletter
         :return: 
         """
-        self._write({"started": False, 'users': []})
+        d = self._read()
+        d["started"] = True
+        d["users"] = []
+        self._write(d)
+
+    def get_list_name(self) -> str:
+        return self._read()['list_name']
+
+    def update_list_name(self, list_name: str) -> None:
+        data = self._read()
+        data["list_name"] = list_name
+        self._write(data)
+
 
 

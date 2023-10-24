@@ -5,16 +5,17 @@ from app.config import load_config
 from app.core.database.database import Database
 from app.core.handlers.basic import get_start, get_free_text, get_cat
 from app.core.handlers import wait_payment
+from app.core.handlers.my_chat_member import my_chat_member
 from app.core.middleware.dbmiddleware import DBSessionMiddleware
 from app.core.utils.commands import set_commands
 from app.core.handlers import reg_for_course, sender
 from app.core.utils.reg_state import StepsForm
 from app.core.utils.sender_state import StepsAdminForm
-from app.core.handlers.senderlist import SenderList
-from aiogram.fsm.context import FSMContext
 
-import asyncio
+from app.core.handlers.senderlist import SenderList
 import logging
+from aiogram.fsm.context import FSMContext
+import asyncio
 import re
 
 from app.core.middleware.countermiddleware import CounterMiddleware
@@ -34,6 +35,7 @@ async def stop_bot(bot: Bot):
     await db.close()
     await bot.send_message(config.bot.DEV_ID, text='Уважаемый админ, бот остановлен')
 
+
 async def start():
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s - [%(levelname)s] - %(name)s - "
@@ -41,17 +43,14 @@ async def start():
 
     bot = Bot(token=config.bot.BOT_TOKEN, parse_mode='HTML')
     storage = MemoryStorage()
-    dp = Dispatcher(storage=storage)   
-
+    dp = Dispatcher(storage=storage)
 
     dp.message.middleware.register(CounterMiddleware())
     dp.update.middleware.register(DBSessionMiddleware(db.session))
-    
     dp.startup.register(start_bot)
     dp.shutdown.register(stop_bot)
 
-    # dp.message.register(get_inline, Command(commands='inline') )
-    # dp.callback_query.register(select_course, F.data.startswith('Информация'))
+    dp.my_chat_member.register(my_chat_member)
     dp.message.register(get_start, Command(commands=['start', 'run']))
     # регистрация
     dp.message.register(reg_for_course.reg_for_course, F.text == 'Подтвердить выбор курса')
@@ -61,23 +60,23 @@ async def start():
     dp.message.register(reg_for_course.get_confirm, StepsForm.GET_CONFIRM)
     # рассылка
     dp.message.register(sender.get_sender, StepsAdminForm.GET_SENDER,
-                        F.chat.id.in_({config.bot.DEV_ID, config.bot.ADMIN_ID})) ### почему так????\
+                        F.chat.id.in_({config.bot.DEV_ID, config.bot.ADMIN_ID}))  ### почему так????\
     dp.message.register(sender.get_name_camp, StepsAdminForm.GET_NAME_CAMP,
                         F.chat.id.in_({config.bot.DEV_ID, config.bot.ADMIN_ID}))
     dp.message.register(sender.get_message, StepsAdminForm.GET_MESSAGE,
                         F.chat.id.in_({config.bot.DEV_ID, config.bot.ADMIN_ID}))
     dp.message.register(sender.get_sheet_name, StepsAdminForm.GET_SHEET_NAME,
                         F.chat.id.in_({config.bot.DEV_ID, config.bot.ADMIN_ID}))
-    
-    dp.message.register(wait_payment.get_pay, StepsForm.GET_PAY) # ждем оплату
-    
+
+    dp.message.register(wait_payment.get_pay, StepsForm.GET_PAY)  # ждем оплату
+
     dp.callback_query.register(sender.sender_decide, F.data.in_(['confirm_sender', 'cancel_sender']))
     dp.message.register(get_cat, F.text == 'Отправь кота')
-    
-    dp.message.register(get_free_text, F.text) # соответствует любому тексту отправленном пользователем 
-    senderlis  = SenderList(bot, dp)
+
+    dp.message.register(get_free_text, F.text)  # соответствует любому тексту отправленном пользователем
+    sender_lis = SenderList(bot, dp)
     try:
-        await dp.start_polling(bot, sender_list=senderlis)
+        await dp.start_polling(bot, sender_list=sender_lis, allowed_updates=dp.resolve_used_update_types())
     finally:
         await bot.session.close()
 
@@ -85,12 +84,9 @@ async def start():
 if __name__ == '__main__':
     asyncio.run(start())
 
-
-
-
     # dp.message.register(get_another_keyboard, F.text == 'Покажи другую интересную клавиатуру')
     # dp.message.register(get_photo, F.photo)
-    
+
     # dp.message.register(get_keyboard, F.text=='Покажи интересную клавиатуру')
     # тут можно и регулярки использовать
     # dp.message.register(get_hello, F.text.lower().in_({'здрасте','привет'}))

@@ -1,18 +1,19 @@
 from aiogram import Bot
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
+
 from app.core.utils.reg_state import StepsForm
 from app.core.keyboards.reply import get_cat_reply, get_main_reply, get_reply_confirm, get_reply_courses, get_reply_spclub
 from app.config import load_config
+
 config = load_config()
 
 from app.core.database.users import UserModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, insert
 
-from app.core.utils.google_api import service, spreadsheet_id
+from app.core.utils.google_api import service, spreadsheet_id, GoogleTable
 from pprint import pprint
-
 
 async def reg_for_course(message: Message, state: FSMContext):
     await message.answer(f'{message.from_user.first_name}, начинаем регистрацию на курс! Введите имя и фамилию:',
@@ -87,7 +88,6 @@ async def get_confirm(message: Message, state: FSMContext, session: AsyncSession
         await message.answer('Данные не подтверждены :(', reply_markup=get_main_reply())
 
     else:
-        await message.answer('Спасибо! Данные подтверждены :)\r\nРасчет оплаты придет чуть позже.\r\nМогу отправить кота ;)', reply_markup=get_cat_reply())
         data = await state.get_data()  
         await state.clear()
         
@@ -101,14 +101,15 @@ async def get_confirm(message: Message, state: FSMContext, session: AsyncSession
                 user.arrears = 0
             await session.commit()
             # записываем GoogleSheets
-            s = [[message.from_user.id, message.from_user.username, data['full_name'], data.get("course", "нет"), data["sp_club"], 0]]
-            results = service.spreadsheets().values().append(spreadsheetId = spreadsheet_id, 
-                                                        range="Лист1!A2",
-                                                        valueInputOption= "USER_ENTERED",
-                                                        body={"values":s}
-                                                        ).execute()
+            s = [[message.from_user.id, message.from_user.username, data['full_name'], data.get("course", "нет"),
+                  data["sp_club"], 0]]
+            gt = GoogleTable()
+            gt.append_user(s)
+            await message.answer(
+                'Спасибо! Данные подтверждены :)\r\nРасчет оплаты придет чуть позже.\r\nМогу отправить кота ;)',
+                reply_markup=get_cat_reply())
         except:
-            await message.answer('Данные не отправлены!Начните с начала')
+            await message.answer('Данные не отправлены!Начните с начала', reply_markup=get_main_reply())
 
 
         

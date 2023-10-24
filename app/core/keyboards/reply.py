@@ -1,6 +1,8 @@
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, KeyboardButtonPollType
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
+from app.core.utils.text import TextButton
+
 def get_main_reply():
     k_b = ReplyKeyboardBuilder()
     k_b.button(text='Подтвердить выбор курса')
@@ -54,7 +56,7 @@ def get_reply_confirm():
 
 def get_admin_reply():
     k_b = ReplyKeyboardBuilder()
-    k_b.button(text='Отправить простое сообщение всем')
+    k_b.button(text=TextButton.send_simple_message)
     k_b.button(text='Разослать подтверждение курса/клуба')
     k_b.button(text='Рассчитать стоимости')
     k_b.button(text='Разослать стоимости')
