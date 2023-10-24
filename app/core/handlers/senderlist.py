@@ -45,7 +45,7 @@ class SenderList:
 
     async def broadcaster(self, message_id=None, from_chat_id=None, name_camp=None, options=None, users_ids=None, text=None):
         newsletter_manager = NewsletterManager()
-        newsletter_manager.start() # Запись ключа started на true
+        newsletter_manager.start()                  # Запись ключа started на true
         old_users = newsletter_manager.get_users()  # Список пользователей которым уже было разослано сообщение
         count = 0
 
@@ -56,7 +56,7 @@ class SenderList:
             try:
                 await self.send_message_inner(user_id, message_id, from_chat_id, name_camp, options, users_ids, text=text)   # Если не было разослано сообщение, то добавить 
                 newsletter_manager.add_user(user_id)  
-                count += 1                                           # Добавить пользователя в список разосланных
+                count += 1                            # Добавить пользователя в список разосланных
                 await asyncio.sleep(.05)
             except Exception as e:
                 print("При блокировке:", e)
@@ -70,11 +70,12 @@ class SenderList:
         try:
             users = gt.get_data(f"'{sheet_name}'!A2:E300")
             values = gt.get_data("'Стоимости'!A2:D18")
-            print(users, values)
-            course_data = dict([(i[0], i[1]) for i in values['values'] if len(i)>0]) # делаем словарь {'name':'цена'}
-            new_sp = [i + [int(course_data.get(i[3], 0)) + int(course_data.get(i[4], 0))] + 10 for i in users['values'] if len(i) > 0]
 
+            course_data = dict([(i[0], i[1]) for i in values['values'] if len(i)>0]) #  {'name_club':'цена'}
+            new_sp = [i + [int(course_data.get(i[3], 0)) + int(course_data.get(i[4], 0)) + 10] for i in users['values']
+                      if len(i) > 0]  # курс+клуб+10
             users = gt.batchUpdate(f"'{sheet_name}'!A2:F300", new_sp)
+
             try:
                 for i in new_sp:
                     result = await session.execute(select(UserModel).filter_by(tg_id=i[0]))
@@ -104,36 +105,4 @@ class SenderList:
         count = await self.broadcaster(options=options, users_ids=values, text=text)
        
         return count
-            
-        # newsletter_manager = NewsletterManager()
-        # count = 0
-
-        # try:     
-        #     newsletter_manager.start() # Запись ключа started на true
-        #     old_users = newsletter_manager.get_users()  # Список пользователей которым уже было разослано сообщение
-
-        #     for user_id in users_ids:
-        #         if user_id[0] in old_users:                 # Если пользователю уже было разослано сообщение, ничего не делать (continue)
-        #             continue
-        #         await self.send_message(user_id[0], message_id, from_chat_id, name_camp, options)   # Если не было разослано сообщение, то добавить 
-        #         newsletter_manager.add_user(user_id[0])  
-        #         count += 1                                           # Добавить пользователя в список разосланных
-        #         await asyncio.sleep(.05)
-
-        # except (Exception,):
-        #     ...
-        # finally:
-        #     # Запись ключа started на false
-        #     newsletter_manager.stop()
-        #     return count
-
-        
-        
-
-        
-    # async def send_calc(self):
-    #     users = service.spreadsheets().values().get(spreadsheetId=spreadsheet_id,
-    #                                          range="'Лист1'!A2:F300",         # формат "'Лист2'!A1:E10"
-    #                                          majorDimension='ROWS'
-    #                                          ).execute()
         
