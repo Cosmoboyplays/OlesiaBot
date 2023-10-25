@@ -20,7 +20,7 @@ config = load_config()
 
 async def get_sender(message: Message, state: FSMContext):
     if message.text == TextButton.count_price:
-        await message.answer(f'Для какого листа считаем?\r\nРасчитаем для него столбец "arrears".\r\nНазвание листа:')
+        await message.answer(f'Для какого листа считаем?\r\nРасчитаем для него столбец "arrears". Добавим 10р.\r\nНазвание листа:')
         await state.set_state(StepsAdminForm.GET_SHEET_NAME)
         await state.update_data(options=message.text)
     elif message.text == TextButton.send_price:
@@ -38,6 +38,14 @@ async def get_sender(message: Message, state: FSMContext):
 
 
 async def get_sheet_name(message: Message, state: FSMContext, sender_list: SenderList, session: AsyncSession):
+    gt = GoogleTable()
+    if gt.check_sheet(message.text):
+        pass
+    else:
+        await message.answer(f'Нет такого листа в таблице!Заново!')
+        await state.clear()
+        return
+
     await message.answer(f'Название листа: {message.text}\r\n')
     data = await state.get_data()
     if data.get('options')==TextButton.send_price:               # рассылка стоимостей
@@ -47,21 +55,14 @@ async def get_sheet_name(message: Message, state: FSMContext, sender_list: Sende
         await state.set_state(StepsAdminForm.GET_MESSAGE)
 
     elif data.get('options')==TextButton.send_confirm:           # подтверждение
-        gt = GoogleTable()
-        if gt.check_sheet(message.text):
-            newsletter_manager = NewsletterManager()
-            newsletter_manager.update_list_name(message.text)
-        else:
-            await message.answer(f'Нет такого листа в таблице!Заново!')
-            await state.clear()
-            return
+        newsletter_manager = NewsletterManager()
+        newsletter_manager.update_list_name(message.text)
         await message.answer(f'Напишите сообщение рассылки:')
         await state.set_state(StepsAdminForm.GET_MESSAGE)
 
     else:                                                        # расчет стоимостей
         await state.clear() 
         await sender_list.calculation(message.text, session)
-
 
 
 async def get_name_camp(message: Message, state: FSMContext):

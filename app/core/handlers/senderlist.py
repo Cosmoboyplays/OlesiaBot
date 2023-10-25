@@ -27,7 +27,7 @@ class SenderList:
         try:
             if options==TextButton.send_confirm:
                 await self.bot.copy_message(user_id, from_chat_id, message_id, reply_markup=get_main_reply())
-                print(user_id)
+
             elif options==TextButton.send_price:
                 state = FSMContext(self.dp.storage, key=StorageKey(bot_id=self.bot.id, chat_id=int(user_id), user_id=int(user_id)))
                 await self.bot.send_message(user_id, f'{text}\nК оплате: {users_ids[user_id]}р.', reply_markup=None)
@@ -73,7 +73,7 @@ class SenderList:
 
             course_data = dict([(i[0], i[1]) for i in values['values'] if len(i)>0]) #  {'name_club':'цена'}
             new_sp = [i + [int(course_data.get(i[3], 0)) + int(course_data.get(i[4], 0)) + 10] for i in users['values']
-                      if len(i) > 0]  # курс+клуб+10
+                      if len(i) > 0]                                                 # курс+клуб+10
             users = gt.batchUpdate(f"'{sheet_name}'!A2:F300", new_sp)
 
             try:
@@ -101,7 +101,7 @@ class SenderList:
         
         values = dict([(i[0], i[5]) for i in users['values']])
         values = {key: value for key, value in values.items() if value != '0'}
-        print(values)
+
         count = await self.broadcaster(options=options, users_ids=values, text=text)
        
         return count

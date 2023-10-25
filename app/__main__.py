@@ -42,8 +42,9 @@ async def start():
                                "(%(filename)s).%(funcName)s(%(lineno)d) - %(message)s")
 
     bot = Bot(token=config.bot.BOT_TOKEN, parse_mode='HTML')
-    storage = MemoryStorage()
-    dp = Dispatcher(storage=storage)
+    # redis = Redis()
+    # storage = RedisStorage.from_url("redis://localhost:6379/1")
+    dp = Dispatcher(storage=MemoryStorage())
 
     dp.message.middleware.register(CounterMiddleware())
     dp.update.middleware.register(DBSessionMiddleware(db.session))
@@ -86,7 +87,6 @@ if __name__ == '__main__':
 
     # dp.message.register(get_another_keyboard, F.text == 'Покажи другую интересную клавиатуру')
     # dp.message.register(get_photo, F.photo)
-
     # dp.message.register(get_keyboard, F.text=='Покажи интересную клавиатуру')
     # тут можно и регулярки использовать
     # dp.message.register(get_hello, F.text.lower().in_({'здрасте','привет'}))
