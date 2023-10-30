@@ -18,9 +18,13 @@ class GoogleTable():
     def __init__(self) -> None:
         pass
 
-    def append_user(self, s: list):
-        newsletter_manager = NewsletterManager()
-        sheet_name = newsletter_manager.get_list_name()
+    def append_user(self, s: list, sheet_name=None):
+        print(sheet_name)
+        if sheet_name == None:
+            newsletter_manager = NewsletterManager()
+            sheet_name = newsletter_manager.get_list_name()
+        print(sheet_name)
+
         service.spreadsheets().values().append(spreadsheetId=spreadsheet_id,
                                                 range=f"{sheet_name}!A2",
                                                 valueInputOption="USER_ENTERED",

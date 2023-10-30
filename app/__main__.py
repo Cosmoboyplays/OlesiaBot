@@ -54,7 +54,7 @@ async def start():
     dp.my_chat_member.register(my_chat_member)
     dp.message.register(get_start, Command(commands=['start', 'run']))
     # регистрация
-    dp.message.register(reg_for_course.reg_for_course, F.text == 'Подтвердить выбор курса')
+    dp.message.register(reg_for_course.reg_for_course, F.text == 'Подтвердить выбор курса :)|')
     dp.message.register(reg_for_course.get_name, StepsForm.GET_NAME)
     dp.message.register(reg_for_course.get_course, StepsForm.GET_COURSE)
     dp.message.register(reg_for_course.get_spclub, StepsForm.GET_SPCLUB)

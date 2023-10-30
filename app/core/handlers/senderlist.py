@@ -25,22 +25,21 @@ class SenderList:
 
     async def send_message_inner(self, user_id, message_id, from_chat_id, name_camp, options: str, users_ids, text=None):
         try:
-            if options==TextButton.send_confirm:
+            if options == TextButton.send_confirm:
                 await self.bot.copy_message(user_id, from_chat_id, message_id, reply_markup=get_main_reply())
 
-            elif options==TextButton.send_price:
+            elif options == TextButton.send_price:
                 state = FSMContext(self.dp.storage, key=StorageKey(bot_id=self.bot.id, chat_id=int(user_id), user_id=int(user_id)))
                 await self.bot.send_message(user_id, f'{text}\nК оплате: {users_ids[user_id]}р.', reply_markup=None)
                 await state.set_state(StepsForm.GET_PAY)
-
-            else:    
-                print(user_id)
+            else:
                 await self.bot.copy_message(user_id, from_chat_id, message_id, reply_markup=None)
+
         except TelegramBadRequest as e:
             print(e)
         except TelegramRetryAfter as e:
             await asyncio.sleep(e.retry_after)
-            return await self.send_message_inner(user_id, message_id, from_chat_id, name_camp, options)    
+            return await self.send_message_inner(user_id, message_id, from_chat_id, name_camp, options, users_ids)
         
 
     async def broadcaster(self, message_id=None, from_chat_id=None, name_camp=None, options=None, users_ids=None, text=None):
@@ -66,6 +65,9 @@ class SenderList:
 
            
     async def calculation(self, sheet_name, session: AsyncSession):
+        """Считаем сколько должен человек.
+
+        пишем в базу и в google sheets"""
         gt = GoogleTable()
         try:
             users = gt.get_data(f"'{sheet_name}'!A2:E300")

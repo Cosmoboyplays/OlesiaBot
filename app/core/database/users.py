@@ -1,4 +1,4 @@
-from sqlalchemy import VARCHAR, Integer, Text, Column, update
+from sqlalchemy import VARCHAR, Integer, Text, Column, update, DateTime
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,6 +17,7 @@ class UserModel(Base):
     sp_club = Column(Text(30), nullable=True)
     arrears = Column(Integer, nullable=True)
     state = Column(VARCHAR(length=6), nullable=False, default='member')
+    date = Column(DateTime, nullable=True)
 
     
     def __repr__(self):

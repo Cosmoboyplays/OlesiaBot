@@ -11,7 +11,7 @@ from app.core.keyboards.reply import get_admin_reply, get_cat_reply, get_main_re
 from app.core.utils.sender_state import StepsAdminForm
 from app.core.database.database import Database
 
-from datetime import datetime
+from datetime import date
 from sqlalchemy import select, insert
 import requests
 import os
@@ -28,37 +28,38 @@ async def get_cat(message: Message, bot: Bot, session: AsyncSession):
     user = result.scalar_one_or_none()
     if user.course == None:
         await message.answer(f'Хочешь записаться на курс по изучению иностранного языка или в разговорный клуб?',
-                            reply_markup=get_main_reply())
+                             reply_markup=get_main_reply())
     else:
         await message.answer(f'Хочешь кота?',
-                            reply_markup=get_cat_reply())
+                             reply_markup=get_cat_reply())
 
 
 async def get_start(message: Message, bot: Bot, state: FSMContext, session: AsyncSession):
     if message.from_user.id in (config.bot.ADMIN_ID, config.bot.DEV_ID):
         await state.set_state(StepsAdminForm.GET_SENDER)
         await message.answer(f'Ты здесь босс, что делаем?',
-                            reply_markup=get_admin_reply())
+                             reply_markup=get_admin_reply())
         return
-    
-    result = await session.execute(select(UserModel).filter_by(tg_id=message.from_user.id))   
+
+    result = await session.execute(select(UserModel).filter_by(tg_id=message.from_user.id))
     user = result.scalar_one_or_none()
     if not user:
-        await session.execute(insert(UserModel).values(tg_id=message.from_user.id, name=message.from_user.username))
-        await session.commit()   
+        await session.execute(insert(UserModel).values(tg_id=message.from_user.id, name=message.from_user.username,
+                                                       date=date.today()))
+        await session.commit()
         await message.answer(f'Хочешь записаться на курс по изучению иностранного языка или в разговорный клуб?',
-                                reply_markup=get_main_reply())
-    
-    else:    
-        if user.course == None:
+                             reply_markup=get_main_reply())
+
+    else:
+        if user.course is None:
             await message.answer(f'Хочешь записаться на курс по изучению иностранного языка или в разговорный клуб?',
-                                reply_markup=get_main_reply())
+                                 reply_markup=get_main_reply())
         else:
             await message.answer(f'Хочешь кота?',
-                                reply_markup=get_cat_reply())
-    
+                                 reply_markup=get_cat_reply())
 
     # await message.reply(f'Привет <b>{message.from_user.first_name}. </b>') # ответ с пересланным 
+
 
 async def get_free_text(message: Message, bot: Bot, session: AsyncSession):
     await message.answer('Я не умею на такое отвечать :(')
@@ -68,12 +69,10 @@ async def get_free_text(message: Message, bot: Bot, session: AsyncSession):
     user = result.scalar_one_or_none()
     if user.course == None:
         await message.answer(f'Хочешь записаться на курс по изучению иностранного языка или в разговорный клуб?',
-                            reply_markup=get_main_reply())
+                             reply_markup=get_main_reply())
     else:
         await message.answer(f'Хочешь кота?',
-                            reply_markup=get_cat_reply())
-
-
+                             reply_markup=get_cat_reply())
 
 # async def send_in_all_chat(message: Message, bot: Bot, session: AsyncSession):
 #     count = 0
@@ -125,6 +124,3 @@ async def get_free_text(message: Message, bot: Bot, session: AsyncSession):
 # async def get_inline(message: Message, bot: Bot):
 #     await message.answer(f'Привет {message.from_user.first_name}, показываю inline клавиатуру',
 #                           reply_markup=select_course) # reply_markup=select_course
-
-
-

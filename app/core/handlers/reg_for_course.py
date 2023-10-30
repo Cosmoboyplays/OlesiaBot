@@ -1,24 +1,33 @@
 from aiogram import Bot
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.core.utils.reg_state import StepsForm
 from app.core.keyboards.reply import get_cat_reply, get_main_reply, get_reply_confirm, get_reply_courses, get_reply_spclub
+from app.core.database.users import UserModel
+from app.core.utils.google_api import GoogleTable
 from app.config import load_config
 
 config = load_config()
 
-from app.core.database.users import UserModel
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, insert
-
-from app.core.utils.google_api import service, spreadsheet_id, GoogleTable
-from pprint import pprint
-
-async def reg_for_course(message: Message, state: FSMContext):
-    await message.answer(f'{message.from_user.first_name}, начинаем регистрацию на курс! Введите имя и фамилию:',
-                         reply_markup=None)
-    await state.set_state(StepsForm.GET_NAME)
+async def reg_for_course(message: Message, state: FSMContext, session: AsyncSession):
+    result = await session.execute(select(UserModel).filter_by(tg_id=message.from_user.id))
+    user = result.scalar_one_or_none()
+    if user.course == None:
+        await message.answer(f'{message.from_user.first_name}, начинаем регистрацию на курс! Введите имя и фамилию:',
+                             reply_markup=None)
+        await state.update_data(status='New')      # если человек первый раз подтверждает то запишем его в лист 'Новые'
+        await state.set_state(StepsForm.GET_NAME)
+    else:
+        await message.answer(
+            f'Вы с нами не первый месяц! Если данные не изменились и вы хотите продолжить занятия, пожалуйста подтвердите')
+        await state.update_data(full_name=user.full_name, course=user.course, sp_club=user.sp_club, status='Old')
+        await state.set_state(StepsForm.GET_CONFIRM)
+        await message.answer(f'Вас зовут: {user.full_name}\r\n' \
+                                  f'Ваш курс: {user.course}\r\n' \
+                                  f'Ваш клуб: {user.sp_club}', reply_markup=get_reply_confirm())
 
 
 async def get_name(message: Message, state: FSMContext):
@@ -60,6 +69,7 @@ async def get_course(message: Message, state: FSMContext, bot: Bot):
 async def get_spclub(message: Message, state: FSMContext, bot: Bot):
     if message.text=='Мне не нужен разговорный клуб':
         await state.update_data(sp_club='нет')
+
     elif message.text=='Я не знаю':
         await message.answer(f'C вами свяжется Олеся', reply_markup=get_main_reply())
         await bot.send_message(config.bot.ADMIN_ID, f'Свяжись с @{message.from_user.username}, человек не знает в какой разговорный клуб')    
@@ -83,14 +93,20 @@ async def get_spclub(message: Message, state: FSMContext, bot: Bot):
 
 
 async def get_confirm(message: Message, state: FSMContext, session: AsyncSession):
-    if message.text=='Нет':
+    data = await state.get_data()
+
+    if message.text == 'Нет' and data['status'] == 'New':
         await state.clear()
         await message.answer('Данные не подтверждены :(', reply_markup=get_main_reply())
 
-    else:
-        data = await state.get_data()  
+    elif message.text == 'Нет' and data['status'] == 'Old':
         await state.clear()
-        
+        await state.update_data(status='Old')
+        await state.set_state(StepsForm.GET_NAME)
+        await message.answer('Данные не подтверждены, придется заполнить заново\n Введите имя и фамилию:')
+
+    elif message.text == 'Да':
+        await state.clear()
         result = await session.execute(select(UserModel).filter_by(tg_id=message.from_user.id))
         user = result.scalar_one_or_none()
         try:
@@ -100,34 +116,19 @@ async def get_confirm(message: Message, state: FSMContext, session: AsyncSession
                 user.sp_club = data["sp_club"]
                 user.arrears = 0
             await session.commit()
-            # записываем GoogleSheets
+
             s = [[message.from_user.id, message.from_user.username, data['full_name'], data.get("course", "нет"),
                   data["sp_club"], 0]]
-            gt = GoogleTable()
-            gt.append_user(s)
+            gt = GoogleTable()                                                                # записываем GoogleSheets
+            if data['status'] == 'Old':
+                gt.append_user(s)
+            else:
+                gt.append_user(s, 'Новые')
+
             await message.answer(
                 'Спасибо! Данные подтверждены :)\r\nРасчет оплаты придет чуть позже.\r\nМогу отправить кота ;)',
                 reply_markup=get_cat_reply())
         except:
             await message.answer('Данные не отправлены!Начните с начала', reply_markup=get_main_reply())
-
-
-        
-        
-
-
-
-
-
-
-        # values = service.spreadsheets().values().get(spreadsheetId=spreadsheet_id,
-        #                                      range="'Лист1'!A1:E10",         # формат "'Лист2'!A1:E10"
-        #                                      majorDimension='ROWS'
-        #                                      ).execute()
-
-        # pprint(values)
-
- 
-    
-
-
+    else:
+        await message.answer('Вы данные подтверждаете?', reply_markup=get_reply_confirm())

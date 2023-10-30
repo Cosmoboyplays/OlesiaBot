@@ -5,7 +5,7 @@ from app.core.utils.text import TextButton
 
 def get_main_reply():
     k_b = ReplyKeyboardBuilder()
-    k_b.button(text='Подтвердить выбор курса')
+    k_b.button(text='Подтвердить выбор курса :)|')
     k_b.button(text='Отправь кота')
 
     k_b.adjust(1)
