@@ -60,7 +60,7 @@ class NewsletterManager:
         :return: 
         """
         d = self._read()
-        d["started"] = True
+        d["started"] = False
         d["users"] = []
         self._write(d)
 
