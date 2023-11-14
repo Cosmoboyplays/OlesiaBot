@@ -11,7 +11,7 @@ credentials = ServiceAccountCredentials.from_json_keyfile_name(
     ['https://www.googleapis.com/auth/spreadsheets',
      'https://www.googleapis.com/auth/drive'])
 httpAuth = credentials.authorize(httplib2.Http())
-service = googleapiclient.discovery.build('sheets', 'v4', http = httpAuth)
+service = googleapiclient.discovery.build('sheets', 'v4', http=httpAuth)
 
 
 class GoogleTable():
@@ -20,16 +20,16 @@ class GoogleTable():
 
     def append_user(self, s: list, sheet_name=None):
         print(sheet_name)
-        if sheet_name == None:
+        if sheet_name is None:
             newsletter_manager = NewsletterManager()
             sheet_name = newsletter_manager.get_list_name()
         print(sheet_name)
 
         service.spreadsheets().values().append(spreadsheetId=spreadsheet_id,
-                                                range=f"{sheet_name}!A2",
-                                                valueInputOption="USER_ENTERED",
-                                                body={"values": s}
-                                                ).execute()
+                                               range=f"{sheet_name}!A2",
+                                               valueInputOption="USER_ENTERED",
+                                               body={"values": s}
+                                               ).execute()
 
     def check_sheet(self, sheet_name):
         '''Checking a sheet in the table'''
@@ -41,20 +41,19 @@ class GoogleTable():
 
     def get_data(self, range):
         return service.spreadsheets().values().get(spreadsheetId=spreadsheet_id, range=range,  # формат "'Лист2'!A1:E10"
-                                             majorDimension='ROWS'
-                                             ).execute()
+                                                   majorDimension='ROWS'
+                                                   ).execute()
 
     def batchUpdate(self, range, values):
         return service.spreadsheets().values().batchUpdate(spreadsheetId=spreadsheet_id,
                                                            body={"valueInputOption": "USER_ENTERED",
-                                                          "data": [
-                                                              {"range": range,
-                                                               "majorDimension": "ROWS",
-                                                               # сначала заполнять ряды, затем столбцы (т.е. самые внутренние списки в values - это ряды)
-                                                               "values": values}
-                                                          ]
-                                                          }).execute()
-
+                                                                 "data": [
+                                                                     {"range": range,
+                                                                      "majorDimension": "ROWS",
+                                                                      # сначала заполнять ряды, затем столбцы (т.е. самые внутренние списки в values - это ряды)
+                                                                      "values": values}
+                                                                 ]
+                                                                 }).execute()
 
 # values = service.spreadsheets().values().get(spreadsheetId=spreadsheet_id,
 #                                              range="'Лист1'!A1:E300",         # формат "'Лист2'!A1:E10"

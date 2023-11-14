@@ -61,12 +61,14 @@ async def start():
     dp.message.register(reg_for_course.get_confirm, StepsForm.GET_CONFIRM)
     # рассылка
     dp.message.register(sender.get_sender, StepsAdminForm.GET_SENDER,
-                        F.chat.id.in_({config.bot.DEV_ID, config.bot.ADMIN_ID}))  ### почему так????\
+                        F.chat.id.in_({config.bot.DEV_ID, config.bot.ADMIN_ID}))
     dp.message.register(sender.get_name_camp, StepsAdminForm.GET_NAME_CAMP,
                         F.chat.id.in_({config.bot.DEV_ID, config.bot.ADMIN_ID}))
     dp.message.register(sender.get_message, StepsAdminForm.GET_MESSAGE,
                         F.chat.id.in_({config.bot.DEV_ID, config.bot.ADMIN_ID}))
     dp.message.register(sender.get_sheet_name, StepsAdminForm.GET_SHEET_NAME,
+                        F.chat.id.in_({config.bot.DEV_ID, config.bot.ADMIN_ID}))
+    dp.message.register(sender.get_confirm_key, StepsAdminForm.GET_REPLY_KEY,
                         F.chat.id.in_({config.bot.DEV_ID, config.bot.ADMIN_ID}))
 
     dp.message.register(wait_payment.get_pay, StepsForm.GET_PAY)  # ждем оплату

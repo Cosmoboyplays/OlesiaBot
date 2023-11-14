@@ -22,7 +22,8 @@ async def reg_for_course(message: Message, state: FSMContext, session: AsyncSess
         await state.set_state(StepsForm.GET_NAME)
     else:
         await message.answer(
-            f'Вы с нами не первый месяц! Если данные не изменились и вы хотите продолжить занятия, пожалуйста подтвердите')
+            f'Вы с нами не первый месяц! Если данные не изменились и вы хотите продолжить занятия, '
+            f'пожалуйста подтвердите')
         await state.update_data(full_name=user.full_name, course=user.course, sp_club=user.sp_club, status='Old')
         await state.set_state(StepsForm.GET_CONFIRM)
         await message.answer(f'Вас зовут: {user.full_name}\r\n' \

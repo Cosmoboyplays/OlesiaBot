@@ -3,6 +3,7 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 from app.core.utils.text import TextButton
 
+
 def get_main_reply():
     k_b = ReplyKeyboardBuilder()
     k_b.button(text='Подтвердить выбор курса :)|')
@@ -11,11 +12,13 @@ def get_main_reply():
     k_b.adjust(1)
     return k_b.as_markup(resize_keyboard=True, one_time_keyboard=True)
 
+
 def get_cat_reply():
     k_b = ReplyKeyboardBuilder()
     k_b.button(text='Отправь кота')
 
     return k_b.as_markup(resize_keyboard=True, one_time_keyboard=False)
+
 
 def get_reply_courses():
     k_b = ReplyKeyboardBuilder()
@@ -29,8 +32,9 @@ def get_reply_courses():
     k_b.button(text='Я не знаю')
 
     k_b.adjust(1)
-    return k_b.as_markup(resize_keyboard=True, one_time_keyboard=True, 
-                 input_field_placeholder='Какой курс?')
+    return k_b.as_markup(resize_keyboard=True, one_time_keyboard=True,
+                         input_field_placeholder='Какой курс?')
+
 
 def get_reply_spclub():
     k_b = ReplyKeyboardBuilder()
@@ -41,8 +45,9 @@ def get_reply_spclub():
     k_b.button(text='Я не знаю')
 
     k_b.adjust(1)
-    return k_b.as_markup(resize_keyboard=True, one_time_keyboard=True, 
-                 input_field_placeholder='Какой клуб?')
+    return k_b.as_markup(resize_keyboard=True, one_time_keyboard=True,
+                         input_field_placeholder='Какой клуб?')
+
 
 def get_reply_confirm():
     k_b = ReplyKeyboardBuilder()
@@ -50,8 +55,8 @@ def get_reply_confirm():
     k_b.button(text='Нет')
 
     k_b.adjust(2)
-    return k_b.as_markup(resize_keyboard=True, one_time_keyboard=True, 
-                 input_field_placeholder='Да/Нет')
+    return k_b.as_markup(resize_keyboard=True, one_time_keyboard=True,
+                         input_field_placeholder='Да/Нет')
 
 
 def get_admin_reply():
@@ -60,12 +65,11 @@ def get_admin_reply():
     k_b.button(text='Разослать подтверждение курса/клуба')
     k_b.button(text='Рассчитать стоимости')
     k_b.button(text='Разослать стоимости')
-
+    k_b.button(text='Рассылка по листу')
 
     k_b.adjust(1)
-    return k_b.as_markup(resize_keyboard=True, one_time_keyboard=True, 
-                 input_field_placeholder='Да/Нет')
-
+    return k_b.as_markup(resize_keyboard=True, one_time_keyboard=True,
+                         input_field_placeholder='Да/Нет')
 
 # reply_keyboard = ReplyKeyboardMarkup(keyboard=[
 #     [

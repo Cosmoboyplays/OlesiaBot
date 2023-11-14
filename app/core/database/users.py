@@ -1,4 +1,4 @@
-from sqlalchemy import VARCHAR, Integer, Text, Column, update, DateTime
+from sqlalchemy import VARCHAR, Integer, Text, Column, update, DateTime, BigInteger
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -7,10 +7,10 @@ Base = declarative_base()
 
 class UserModel(Base):
 
-    __tablename__ = "users"
+    __tablename__ = "user_table"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    tg_id = Column(Integer(), unique=True)
+    tg_id = Column(BigInteger, unique=True)
     name = Column(Text(250), nullable=True)
     full_name = Column(Text(64), nullable=True)
     course = Column(Text(30), nullable=True)
