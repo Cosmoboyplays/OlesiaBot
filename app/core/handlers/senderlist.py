@@ -116,8 +116,10 @@ class SenderList:
                                                     range=f"'{sheet_name}'!A2:F300",  # формат "'Лист2'!A1:E10"
                                                     majorDimension='ROWS'
                                                     ).execute()
-
-        values = dict([(i[0], i[5]) for i in users['values']])
-        values = {key: value for key, value in values.items() if value != '0'}
+        if data.get('options', None) == TextButton.send_price:
+            values = dict([(i[0], i[5]) for i in users['values']])
+            values = {key: value for key, value in values.items() if value != '0'}
+        else:
+            values = [i[0] for i in users['values']]
         count = await self.broadcaster(data, users_ids=values)
         return count

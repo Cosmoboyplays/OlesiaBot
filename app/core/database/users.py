@@ -7,7 +7,7 @@ Base = declarative_base()
 
 class UserModel(Base):
 
-    __tablename__ = "user_table"
+    __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     tg_id = Column(BigInteger, unique=True)
