@@ -30,8 +30,8 @@ async def reg_for_course(message: Message, state: FSMContext, session: AsyncSess
         await state.update_data(full_name=user.full_name, course=user.course, sp_club=user.sp_club, status='Old')
         await state.set_state(StepsForm.GET_CONFIRM)
         await message.answer(f'Вас зовут: {user.full_name}\r\n' \
-                             f'Ваш курс: {user.course}\r\n' \
-                             f'Ваш клуб: {user.sp_club}', reply_markup=get_reply_confirm())
+                                  f'Ваш курс: {user.course}\r\n' \
+                                  f'Ваш клуб: {user.sp_club}', reply_markup=get_reply_confirm())
 
 
 async def get_name(message: Message, state: FSMContext):

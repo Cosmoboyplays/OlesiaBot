@@ -67,7 +67,7 @@ async def get_free_text(message: Message, bot: Bot, session: AsyncSession):
 
     result = await session.execute(select(UserModel).filter_by(tg_id=message.from_user.id))
     user = result.scalar_one_or_none()
-    if user.course == None:
+    if user.course is None:
         await message.answer(f'Хочешь записаться на курс по изучению иностранного языка или в разговорный клуб?',
                              reply_markup=get_main_reply())
     else:
