@@ -9,3 +9,5 @@ class TextButton:
     send_simple_message = 'Отправить простое сообщение всем'
     send_by_sheet = 'Рассылка по листу'
 
+    # тест
+
