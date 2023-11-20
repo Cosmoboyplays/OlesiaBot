@@ -56,6 +56,7 @@ async def start():
     # регистрация
     dp.message.register(reg_for_course.reg_for_course, F.text == 'Подтвердить выбор курса :)|')
     dp.message.register(reg_for_course.get_name, StepsForm.GET_NAME)
+    dp.message.register(reg_for_course.get_spain_course, StepsForm.GET_SPAIN_COURSE)
     dp.message.register(reg_for_course.get_course, StepsForm.GET_COURSE)
     dp.message.register(reg_for_course.get_spclub, StepsForm.GET_SPCLUB)
     dp.message.register(reg_for_course.get_confirm, StepsForm.GET_CONFIRM)

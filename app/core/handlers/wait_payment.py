@@ -11,7 +11,9 @@ config = load_config()
 
 async def get_pay(message: Message, state: FSMContext, bot: Bot, session: AsyncSession):
     if message.document or message.photo:
-        await bot.forward_message(config.bot.ADMIN_ID, from_chat_id=message.chat.id, message_id=message.message_id)
+        data = await state.get_data()
+        await bot.copy_message(config.bot.ADMIN_ID, from_chat_id=message.chat.id, message_id=message.message_id,
+                                  caption=f"Оплата: {data.get('full_name', 'Нет имени')}")
         await state.clear()
         try:
             await UserModel.update_arrears(session, message.from_user.id, 0)

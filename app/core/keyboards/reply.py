@@ -22,31 +22,46 @@ def get_cat_reply():
 
 def get_reply_courses():
     k_b = ReplyKeyboardBuilder()
+    k_b.button(text='Мне не нужен англ. курс')
     k_b.button(text='"C нуля" ENG - пятница 18:00')
     k_b.button(text='"А1" ENG воскресенье 13:00')
     k_b.button(text='"А1-А2" ENG вторник 18:00')
     k_b.button(text='"А2" ENG среда 18:30')
     k_b.button(text='"В1+" ENG вторник 18:00')
     k_b.button(text='"В2" ENG четверг 18:30')
-    k_b.button(text='Я только в разговорный клуб')
     k_b.button(text='Я не знаю')
 
     k_b.adjust(1)
     return k_b.as_markup(resize_keyboard=True, one_time_keyboard=True,
-                         input_field_placeholder='Какой курс?')
+                         input_field_placeholder='Какой англ. курс?')
 
 
 def get_reply_spclub():
     k_b = ReplyKeyboardBuilder()
+    k_b.button(text='Мне не нужен англ. разговорный клуб')
     k_b.button(text='SC 1 "А1-А2" ENG пятница 18:30')
     k_b.button(text='SC 2 "В1-В2" ENG пятница 18:30')
     k_b.button(text='SC 3 "С1" ENG понедельник 18:00')
-    k_b.button(text='Мне не нужен разговорный клуб')
     k_b.button(text='Я не знаю')
 
     k_b.adjust(1)
     return k_b.as_markup(resize_keyboard=True, one_time_keyboard=True,
                          input_field_placeholder='Какой клуб?')
+
+
+def get_reply_spain_courses():
+    k_b = ReplyKeyboardBuilder()
+    k_b.button(text='Мне не нужен исп. курс')
+    k_b.button(text='SP1 Вторник 17:00')
+    k_b.button(text='SP2 Вторник 18:00')
+    k_b.button(text='SP3 Среда 18:00')
+    k_b.button(text='SP4 Суббота 13:00')
+    k_b.button(text='SP5 Воскресенье 10:00')
+    k_b.button(text='Я не знаю')
+
+    k_b.adjust(1)
+    return k_b.as_markup(resize_keyboard=True, one_time_keyboard=True,
+                         input_field_placeholder='Какой исп. курс?')
 
 
 def get_reply_confirm():

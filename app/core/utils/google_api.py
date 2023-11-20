@@ -19,11 +19,9 @@ class GoogleTable():
         pass
 
     def append_user(self, s: list, sheet_name=None):
-        print(sheet_name)
         if sheet_name is None:
             newsletter_manager = NewsletterManager()
             sheet_name = newsletter_manager.get_list_name()
-        print(sheet_name)
 
         service.spreadsheets().values().append(spreadsheetId=spreadsheet_id,
                                                range=f"{sheet_name}!A2",
@@ -39,18 +37,19 @@ class GoogleTable():
         except Exception as e:
             return False
 
-    def get_data(self, range):
-        return service.spreadsheets().values().get(spreadsheetId=spreadsheet_id, range=range,  # формат "'Лист2'!A1:E10"
+    def get_data(self, sheet_range):
+        return service.spreadsheets().values().get(spreadsheetId=spreadsheet_id, range=sheet_range,  # формат "'Лист2'!A1:E10"
                                                    majorDimension='ROWS'
                                                    ).execute()
 
-    def batchUpdate(self, range, values):
+    def batchUpdate(self, sheet_range, values):
         return service.spreadsheets().values().batchUpdate(spreadsheetId=spreadsheet_id,
                                                            body={"valueInputOption": "USER_ENTERED",
                                                                  "data": [
-                                                                     {"range": range,
+                                                                     {"range": sheet_range,
                                                                       "majorDimension": "ROWS",
-                                                                      # сначала заполнять ряды, затем столбцы (т.е. самые внутренние списки в values - это ряды)
+                                                                      # сначала заполнять ряды, затем столбцы (т.е.
+                                                                      # самые внутренние списки в values - это ряды)
                                                                       "values": values}
                                                                  ]
                                                                  }).execute()

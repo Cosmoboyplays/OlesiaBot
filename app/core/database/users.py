@@ -14,6 +14,7 @@ class UserModel(Base):
     name = Column(Text(250), nullable=True)
     full_name = Column(Text(64), nullable=True)
     course = Column(Text(30), nullable=True)
+    spain_course = Column(Text(30), nullable=True)
     sp_club = Column(Text(30), nullable=True)
     arrears = Column(Integer, nullable=True)
     state = Column(VARCHAR(length=6), nullable=False, default='member')

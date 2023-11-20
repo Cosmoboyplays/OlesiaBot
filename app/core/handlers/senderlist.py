@@ -17,6 +17,8 @@ from app.core.utils.text import TextButton
 config = load_config()
 
 from aiogram.fsm.storage.base import StorageKey
+
+
 ##
 
 class SenderList:
@@ -39,17 +41,17 @@ class SenderList:
 
             elif options == TextButton.send_by_sheet:
                 if key_confirm == 1:
-                    print('Должна быть клава')
-                    await self.bot.copy_message(user_id, int(from_chat_id), int(message_id), reply_markup=get_main_reply())
+                    await self.bot.copy_message(user_id, int(from_chat_id), int(message_id),
+                                                reply_markup=get_main_reply())
                 elif key_confirm is None:
                     await self.bot.copy_message(user_id, int(from_chat_id), int(message_id), reply_markup=None)
 
             elif options == TextButton.send_price:
-                print('333')
                 state = FSMContext(self.dp.storage,
                                    key=StorageKey(bot_id=self.bot.id, chat_id=int(user_id), user_id=int(user_id)))
-                await self.bot.send_message(user_id, f'{text}\nК оплате: {users_ids[user_id]}р.', reply_markup=None)
+                await self.bot.send_message(user_id, f'{text}\nК оплате: {users_ids[user_id][-1]}р.', reply_markup=None)
                 await state.set_state(StepsForm.GET_PAY)
+                await state.update_data(full_name=users_ids[user_id][0])
             else:
                 await self.bot.copy_message(user_id, int(from_chat_id), int(message_id), reply_markup=None)
 
@@ -80,45 +82,43 @@ class SenderList:
         newsletter_manager.stop()
         return count
 
-
     async def calculation(self, sheet_name, session: AsyncSession):
         """Считаем сколько должен человек.
 
         пишем в базу и в google sheets"""
         gt = GoogleTable()
         try:
-            users = gt.get_data(f"'{sheet_name}'!A2:E300")
+            users = gt.get_data(f"'{sheet_name}'!A2:F300")
             values = gt.get_data("'Стоимости'!A2:D18")
-
             course_data = dict([(i[0], i[1]) for i in values['values'] if len(i) > 0])  # {'name_club':'цена'}
-            new_sp = [i + [int(course_data.get(i[3], 0)) + int(course_data.get(i[4], 0)) + 10] for i in users['values']
-                      if len(i) > 0]  # курс+клуб+10
-            users = gt.batchUpdate(f"'{sheet_name}'!A2:F300", new_sp)
+            new_sp = [i + [int(course_data.get(i[3], 0)) + int(course_data.get(i[4], 0)) + int(course_data.get(i[5], 0))]
+                      for i in users['values'] if len(i) > 0]  # анг + sc + spain
+            users = gt.batchUpdate(f"'{sheet_name}'!A2:G300", new_sp)
 
             try:
                 for i in new_sp:
                     result = await session.execute(select(UserModel).filter_by(tg_id=i[0]))
                     user = result.scalar_one_or_none()
                     if user:
-                        user.arrears = i[5]
+                        user.arrears = i[6]
                     await session.commit()
             except Exception:
                 await  self.bot.send_message(config.bot.ADMIN_ID, text='Не могу писать в базу, зови разраба.')
 
             await  self.bot.send_message(config.bot.ADMIN_ID, text='Расчет окончен')
+
         except Exception as e:
-            print(str(e))
             await  self.bot.send_message(config.bot.ADMIN_ID, text='Либо лист неправильно написан, либо все пропало')
 
     async def send_by_sheet(self, data: dict):
         sheet_name = str(data.get('sheet_name'))
         users = service.spreadsheets().values().get(spreadsheetId=spreadsheet_id,
-                                                    range=f"'{sheet_name}'!A2:F300",  # формат "'Лист2'!A1:E10"
+                                                    range=f"'{sheet_name}'!A2:G300",  # формат "'Лист2'!A1:E10"
                                                     majorDimension='ROWS'
                                                     ).execute()
         if data.get('options', None) == TextButton.send_price:
-            values = dict([(i[0], i[5]) for i in users['values']])
-            values = {key: value for key, value in values.items() if value != '0'}
+            values = dict([(i[0], (i[2], i[6])) for i in users['values']])
+            values = {key: value for key, value in values.items() if value[-1] != '0'}
         else:
             values = [i[0] for i in users['values']]
         count = await self.broadcaster(data, users_ids=values)

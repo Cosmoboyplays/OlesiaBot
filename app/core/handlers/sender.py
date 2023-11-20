@@ -21,7 +21,7 @@ config = load_config()
 
 async def get_sender(message: Message, state: FSMContext):
     if message.text == TextButton.count_price:
-        await message.answer(f'Для какого листа считаем?\r\nРасчитаем для него столбец "arrears". Добавим 10р.'
+        await message.answer(f'Для какого листа считаем?\r\nРасчитаем для него столбец "arrears".'
                              f'\r\nНазвание листа:')
         await state.set_state(StepsAdminForm.GET_SHEET_NAME)
         await state.update_data(options=message.text)
