@@ -27,7 +27,8 @@ async def reg_for_course(message: Message, state: FSMContext, session: AsyncSess
         await message.answer(
             f'Вы с нами не первый месяц! Если данные не изменились и вы хотите продолжить занятия, '
             f'пожалуйста, подтвердите')
-        await state.update_data(full_name=user.full_name, course=user.course, sp_club=user.sp_club, status='Old')
+        await state.update_data(full_name=user.full_name, course=user.course, sp_club=user.sp_club,
+                                spain_course=user.spain_course, status='Old')
         await state.set_state(StepsForm.GET_CONFIRM)
         await message.answer(f'Вас зовут: {user.full_name}\r\n' \
                                   f'Ваш исп. курс: {user.spain_course}\r\n' \
@@ -45,7 +46,8 @@ async def get_name(message: Message, state: FSMContext):
 async def get_spain_course(message: Message, state: FSMContext, bot: Bot):
     if message.text == 'Я не знаю':
         await message.answer(f'C вами свяжется Олеся', reply_markup=get_main_reply())
-        await bot.send_message(config.bot.ADMIN_ID, f'Свяжись с @{message.from_user.username}, человек не знает курс')
+        await bot.send_message(config.bot.ADMIN_ID, f'Свяжись с @{message.from_user.username}, человек не знает '
+                                                    f'испанский курс')
         await state.clear()
 
     elif message.text == 'Мне не нужен исп. курс':
