@@ -66,8 +66,8 @@ def get_reply_spain_courses():
 
 def get_reply_confirm():
     k_b = ReplyKeyboardBuilder()
-    k_b.button(text='Да')
-    k_b.button(text='Нет')
+    k_b.button(text='Подтверждаю')
+    k_b.button(text='Не подтверждаю')
 
     k_b.adjust(2)
     return k_b.as_markup(resize_keyboard=True, one_time_keyboard=True,

@@ -143,17 +143,17 @@ async def get_spclub(message: Message, state: FSMContext, bot: Bot):
 async def get_confirm(message: Message, state: FSMContext, session: AsyncSession):
     data = await state.get_data()
 
-    if message.text == 'Нет' and data['status'] == 'New':
+    if message.text == 'Не подтверждаю' and data['status'] == 'New':
         await state.clear()
         await message.answer('Данные не подтверждены :(', reply_markup=get_main_reply())
 
-    elif message.text == 'Нет' and data['status'] == 'Old':
+    elif message.text == 'Не подтверждаю' and data['status'] == 'Old':
         await state.clear()
         await state.update_data(status='Old')
         await state.set_state(StepsForm.GET_NAME)
         await message.answer('Данные не подтверждены, придется заполнить заново\n Введите имя и фамилию:')
 
-    elif message.text == 'Да':
+    elif message.text == 'Подтверждаю':
         await state.clear()
         result = await session.execute(select(UserModel).filter_by(tg_id=message.from_user.id))
         user = result.scalar_one_or_none()
