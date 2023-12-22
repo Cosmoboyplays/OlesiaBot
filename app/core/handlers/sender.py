@@ -104,7 +104,7 @@ async def get_message(message: Message, bot: Bot, state: FSMContext):
 
 
 async def get_confirm_key(message: Message, bot: Bot, state: FSMContext):
-    if message.text == 'Да':
+    if message.text == 'Подтверждаю':
         await state.update_data(key_confirm=1)
     else:
         await state.update_data(key_confirm=None)
